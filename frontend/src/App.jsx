@@ -9,17 +9,17 @@ import AuthPage from './pages/AuthPage';
 // Color palette: Deep slate + warm amber accents + clean whites
 
 const COLORS = {
-  primary: "#1a2942",
-  accent: "#e8a045",
-  accentLight: "#fef3e2",
+  primary: "#3b1f0e",
+  accent: "#c9a96e",
+  accentLight: "#f5ede0",
   success: "#22c55e",
   danger: "#ef4444",
   warning: "#f59e0b",
-  bg: "#f5f6fa",
-  surface: "#ffffff",
-  border: "#e2e8f0",
-  text: "#1e293b",
-  textMuted: "#64748b",
+  bg: "#f2ebe0",
+  surface: "#fdf8f2",
+  border: "#e0d4c0",
+  text: "#2c1a0e",
+  textMuted: "#7a6247",
 };
 
 // ─── INITIAL DATA ─────────────────────────────────────────────────────────────
@@ -295,12 +295,12 @@ const styles = `
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
   
-  body { font-family: 'DM Sans', sans-serif; background: #f5f6fa; color: #1e293b; }
+  body { font-family: 'DM Sans', sans-serif; background: #f2ebe0; color: #2c1a0e; }
   
   .app { display: flex; height: 100vh; overflow: hidden; }
   
   .sidebar {
-    width: 240px; background: #1a2942; color: white;
+    width: 240px; background: #2c1505; color: #f5ede0;
     display: flex; flex-direction: column;
     flex-shrink: 0;
   }
@@ -315,7 +315,7 @@ const styles = `
   }
   
   .sidebar-logo span {
-    font-size: 11px; color: #e8a045; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 11px; color: #c9a96e; letter-spacing: 2px; text-transform: uppercase;
     font-family: 'DM Sans', sans-serif; font-weight: 600;
   }
   
@@ -323,35 +323,35 @@ const styles = `
   
   .nav-section-label {
     font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-    color: rgba(255,255,255,0.35); padding: 16px 8px 6px;
+    color: rgba(245,237,224,0.35); padding: 16px 8px 6px;
   }
   
   .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px; border-radius: 8px; cursor: pointer;
-    color: rgba(255,255,255,0.65); font-size: 14px; font-weight: 500;
+    color: rgba(245,237,224,0.65); font-size: 14px; font-weight: 500;
     transition: all 0.15s; margin-bottom: 2px;
   }
   
-  .nav-item:hover { background: rgba(255,255,255,0.07); color: white; }
-  .nav-item.active { background: rgba(232,160,69,0.2); color: #e8a045; }
+  .nav-item:hover { background: rgba(201,169,110,0.12); color: #f5ede0; }
+  .nav-item.active { background: rgba(201,169,110,0.22); color: #c9a96e; }
   .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
   
   .sidebar-footer {
-    padding: 16px; border-top: 1px solid rgba(255,255,255,0.08);
-    font-size: 13px; color: rgba(255,255,255,0.45);
+    padding: 16px; border-top: 1px solid rgba(201,169,110,0.15);
+    font-size: 13px; color: rgba(245,237,224,0.45);
   }
   
   .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
   
   .topbar {
-    background: white; border-bottom: 1px solid #e2e8f0;
+    background: #fdf8f2; border-bottom: 1px solid #e0d4c0;
     padding: 0 32px; height: 64px; display: flex; align-items: center;
     justify-content: space-between; flex-shrink: 0;
     position: sticky; top: 0; z-index: 10;
   }
   
-  .topbar-title { font-size: 18px; font-weight: 700; color: #1a2942; }
+  .topbar-title { font-size: 18px; font-weight: 700; color: #3b1f0e; }
   .topbar-sub { font-size: 13px; color: #64748b; margin-top: 1px; }
   
   .topbar-actions { display: flex; align-items: center; gap: 12px; }
@@ -359,29 +359,29 @@ const styles = `
   .content { padding: 28px 32px; flex: 1; }
   
   .card {
-    background: white; border-radius: 12px; border: 1px solid #e2e8f0;
+    background: #fdf8f2; border-radius: 12px; border: 1px solid #e0d4c0;
     overflow: hidden;
   }
   
   .card-header {
-    padding: 18px 20px; border-bottom: 1px solid #f1f5f9;
+    padding: 18px 20px; border-bottom: 1px solid #e0d4c0;
     display: flex; align-items: center; justify-content: space-between;
   }
   
-  .card-title { font-size: 15px; font-weight: 700; color: #1a2942; }
+  .card-title { font-size: 15px; font-weight: 700; color: #3b1f0e; }
   .card-body { padding: 20px; }
   
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
   
   .stat-card {
-    background: white; border-radius: 12px; padding: 20px;
-    border: 1px solid #e2e8f0;
+    background: #fdf8f2; border-radius: 12px; padding: 20px;
+    border: 1px solid #e0d4c0;
   }
   
-  .stat-label { font-size: 12px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-  .stat-value { font-size: 28px; font-weight: 700; color: #1a2942; margin: 6px 0 2px; font-family: 'DM Serif Display', serif; }
+  .stat-label { font-size: 12px; color: #7a6247; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-value { font-size: 28px; font-weight: 700; color: #3b1f0e; margin: 6px 0 2px; font-family: 'DM Serif Display', serif; }
   .stat-sub { font-size: 12px; color: #64748b; }
-  .stat-accent { color: #e8a045; }
+  .stat-accent { color: #c9a96e; }
   
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
@@ -392,10 +392,10 @@ const styles = `
   
   .btn svg { width: 15px; height: 15px; }
   
-  .btn-primary { background: #1a2942; color: white; }
-  .btn-primary:hover { background: #243650; }
-  .btn-accent { background: #e8a045; color: white; }
-  .btn-accent:hover { background: #d4912e; }
+  .btn-primary { background: #3b1f0e; color: #f5ede0; }
+  .btn-primary:hover { background: #4f2a12; }
+  .btn-accent { background: #c9a96e; color: #2c1a0e; }
+  .btn-accent:hover { background: #b8935a; }
   .btn-ghost { background: transparent; color: #64748b; border: 1px solid #e2e8f0; }
   .btn-ghost:hover { background: #f8fafc; color: #1e293b; }
   .btn-danger { background: #fee2e2; color: #ef4444; }
@@ -404,10 +404,10 @@ const styles = `
   .btn-sm { padding: 6px 10px; font-size: 12px; }
   
   table { width: 100%; border-collapse: collapse; }
-  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b; font-weight: 600; padding: 12px 16px; text-align: left; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #7a6247; font-weight: 600; padding: 12px 16px; text-align: left; background: #f0e8d8; border-bottom: 1px solid #e0d4c0; }
+  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #ede4d4; color: #3d2410; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fafbfc; }
+  tr:hover td { background: #f5ede0; }
   
   .badge {
     display: inline-flex; align-items: center; padding: 3px 10px;
@@ -416,7 +416,7 @@ const styles = `
   
   .badge-paid { background: #dcfce7; color: #15803d; }
   .badge-unpaid { background: #fef3c7; color: #92400e; }
-  .badge-active { background: #dbeafe; color: #1d4ed8; }
+  .badge-active { background: #e8dcc8; color: #3b1f0e; }
   .badge-inactive { background: #f1f5f9; color: #64748b; }
   
   .form-group { margin-bottom: 16px; }
@@ -507,7 +507,7 @@ const styles = `
   
   .pagination { display: flex; gap: 4px; align-items: center; margin-top: 16px; justify-content: flex-end; }
   .page-btn { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; font-weight: 500; color: #64748b; }
-  .page-btn.active { background: #1a2942; color: white; border-color: #1a2942; }
+  .page-btn.active { background: #3b1f0e; color: #f5ede0; border-color: #3b1f0e; }
   .page-btn:hover:not(.active) { background: #f8fafc; }
   
   .rates-table { width: 100%; }
@@ -966,6 +966,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
   const [search, setSearch] = useState("");
   const [filterClinic, setFilterClinic] = useState("");
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState(new Set());
   const PER_PAGE = 10;
 
   const activeClinics = clinics.filter(c => c.status === "active");
@@ -1006,19 +1007,34 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
 
   const del = (id) => { if (window.confirm("Delete session?")) setSessions(prev => prev.filter(s => s.id !== id)); };
 
+  const toggleSelect = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll = () => setSelected(prev => prev.size === paged.length ? new Set() : new Set(paged.map(s => s.id)));
+  const bulkDelete = () => {
+    if (selected.size === 0) return;
+    if (window.confirm(`Delete ${selected.size} selected session(s)?`)) {
+      setSessions(prev => prev.filter(s => !selected.has(s.id)));
+      setSelected(new Set());
+    }
+  };
+
   const hasPhi = (s) => s.notes?.length > 20;
 
   return (
     <div>
       <div className="filter-row">
         <div style={{ position: "relative", flex: 1 }}>
-          <Icon name="search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#94a3b8" }} />
+          <Icon name="search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#7a6247" }} />
           <input className="form-input" style={{ paddingLeft: 32 }} placeholder="Search by client or clinic…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
         </div>
         <select className="form-select" style={{ width: 200 }} value={filterClinic} onChange={e => { setFilterClinic(e.target.value); setPage(1); }}>
           <option value="">All Clinics</option>
           {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
+        {selected.size > 0 && (
+          <button className="btn btn-danger" onClick={bulkDelete}>
+            <Icon name="trash" />Delete {selected.size} Selected
+          </button>
+        )}
         <button className="btn btn-primary" onClick={openAdd}><Icon name="plus" />Log Session</button>
       </div>
 
@@ -1029,6 +1045,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
           <table>
             <thead>
               <tr>
+                <th style={{ width: 40 }}><input type="checkbox" checked={selected.size === paged.length && paged.length > 0} onChange={toggleAll} style={{ cursor: 'pointer' }} /></th>
                 <th>Date</th>
                 <th>Clinic</th>
                 <th>Client</th>
@@ -1041,15 +1058,16 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
             </thead>
             <tbody>
               {paged.map(s => (
-                <tr key={s.id}>
+                <tr key={s.id} style={{ background: selected.has(s.id) ? 'rgba(201,169,110,0.1)' : undefined }}>
+                  <td><input type="checkbox" checked={selected.has(s.id)} onChange={() => toggleSelect(s.id)} style={{ cursor: 'pointer' }} /></td>
                   <td style={{ fontWeight: 500 }}>{formatDate(s.date)}</td>
                   <td>{s.clinicName}</td>
                   <td style={{ fontWeight: 500 }}>{s.clientInitial}</td>
                   <td>{s.startTime}</td>
                   <td><span className="badge badge-active">{s.duration} min</span></td>
                   <td style={{ fontSize: 12 }}>{s.sessionType}</td>
-                  <td style={{ fontSize: 12, color: "#64748b", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {hasPhi(s) ? <span style={{ color: "#e8a045" }}>⚠ PHI</span> : s.notes || "—"}
+                  <td style={{ fontSize: 12, color: "#7a6247", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {hasPhi(s) ? <span style={{ color: "#c9a96e" }}>⚠ PHI</span> : s.notes || "—"}
                   </td>
                   <td>
                     <div className="actions-cell">
@@ -2186,7 +2204,7 @@ function MainApp() {
         <aside className="sidebar">
           <div className="sidebar-logo">
             <h1>Kinevie</h1>
-            <span>RMT Assistant</span>
+            <span>Smart Practice Manager</span>
           </div>
           <nav className="sidebar-nav">
             <div className="nav-section-label">Main</div>
@@ -2205,14 +2223,18 @@ function MainApp() {
             ))}
           </nav>
           <div className="sidebar-footer">
-            <div style={{ fontWeight: 600, color: 'rgba(255,255,255,0.85)', fontSize: 13, marginBottom: 2 }}>{user?.fullName}</div>
-            {user?.rmtNumber && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 8 }}>RMT #{user.rmtNumber}</div>}
+            <div style={{ fontWeight: 600, color: 'rgba(245,237,224,0.9)', fontSize: 13, marginBottom: 2 }}>{user?.fullName}</div>
+            {user?.rmtNumber && <div style={{ fontSize: 11, color: 'rgba(201,169,110,0.7)', marginBottom: 8 }}>RMT #{user.rmtNumber}</div>}
             <button
               onClick={logout}
-              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}
+              style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)', color: 'rgba(245,237,224,0.7)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 12 }}
             >
               Sign Out
             </button>
+            <div style={{ fontSize: 10, color: 'rgba(201,169,110,0.4)', textAlign: 'center', letterSpacing: '0.5px', borderTop: '1px solid rgba(201,169,110,0.1)', paddingTop: 10 }}>
+              Developed by<br/>
+              <span style={{ fontWeight: 600, color: 'rgba(201,169,110,0.6)' }}>Crossbolt Technologies Inc.</span>
+            </div>
           </div>
         </aside>
 

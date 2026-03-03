@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 const C = {
-  primary: '#1a2942',
-  accent: '#e8a045',
-  accentLight: '#fef3e2',
-  bg: '#f5f6fa',
-  surface: '#ffffff',
-  border: '#e2e8f0',
-  text: '#1e293b',
-  muted: '#64748b',
+  primary: '#3b1f0e',
+  accent: '#c9a96e',
+  accentLight: '#f5ede0',
+  bg: '#f2ebe0',
+  surface: '#fdf8f2',
+  border: '#e0d4c0',
+  text: '#2c1a0e',
+  muted: '#7a6247',
   danger: '#ef4444',
   success: '#22c55e',
 };
@@ -17,7 +17,7 @@ const C = {
 const styles = `
   .auth-root {
     min-height: 100vh;
-    background: linear-gradient(135deg, #0f1c2e 0%, #1a2942 50%, #1e3a5f 100%);
+    background: linear-gradient(135deg, #1a0a02 0%, #3b1f0e 50%, #5c3018 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -29,8 +29,8 @@ const styles = `
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(232,160,69,0.08) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(30,58,95,0.4) 0%, transparent 50%);
+    background: radial-gradient(ellipse at 20% 50%, rgba(201,169,110,0.1) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(92,48,24,0.4) 0%, transparent 50%);
   }
   .auth-card {
     background: #fff;
@@ -49,7 +49,7 @@ const styles = `
   .auth-logo h1 {
     font-family: 'DM Serif Display', serif;
     font-size: 32px;
-    color: ${C.primary};
+    color: #3b1f0e;
     letter-spacing: -0.5px;
   }
   .auth-logo span {
@@ -80,7 +80,7 @@ const styles = `
   }
   .auth-tab.active {
     background: #fff;
-    color: ${C.primary};
+    color: #3b1f0e;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
   .auth-form-group {
@@ -115,7 +115,7 @@ const styles = `
   .auth-btn {
     width: 100%;
     padding: 13px;
-    background: linear-gradient(135deg, ${C.accent}, #d4892e);
+    background: linear-gradient(135deg, #c9a96e, #a07840);
     color: #fff;
     border: none;
     border-radius: 10px;
@@ -126,7 +126,7 @@ const styles = `
     font-family: inherit;
     letter-spacing: 0.3px;
     transition: opacity 0.2s, transform 0.1s;
-    box-shadow: 0 4px 14px rgba(232,160,69,0.35);
+    box-shadow: 0 4px 14px rgba(201,169,110,0.35);
   }
   .auth-btn:hover { opacity: 0.92; transform: translateY(-1px); }
   .auth-btn:active { transform: translateY(0); }
@@ -213,7 +213,7 @@ export default function AuthPage() {
         <div className="auth-card">
           <div className="auth-logo">
             <h1>Kinevie</h1>
-            <span>RMT Assistant</span>
+            <span>Smart Practice Manager</span>
           </div>
 
           <div className="auth-tabs">
