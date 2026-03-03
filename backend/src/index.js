@@ -42,7 +42,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: new Date().toI
 
 // ─── SERVE FRONTEND IN PRODUCTION ────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
-  const staticPath = path.join(__dirname, '../../frontend/dist');
+  const staticPath = path.join(__dirname, '../frontend/dist');
   app.use(express.static(staticPath));
   app.get('*', (req, res) => res.sendFile(path.join(staticPath, 'index.html')));
 }

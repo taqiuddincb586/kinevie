@@ -29,12 +29,9 @@ COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 RUN chown -R kinevie:kinevie /app
 USER kinevie
 
-EXPOSE 3001
-
 ENV NODE_ENV=production
-ENV PORT=3001
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3001/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT:-8080}/api/health || exit 1
 
 CMD ["node", "src/index.js"]
