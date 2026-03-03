@@ -8,15 +8,23 @@ router.use(auth);
 
 // ─── Build transporter from user's saved SMTP settings ───────────────────────
 function buildTransporter(smtp) {
+  // Railway blocks outbound port 587 — force port 465 (SSL) for Gmail
+  const isGmail = (smtp.host || '').includes('gmail.com');
+  const port = isGmail ? 465 : (smtp.port || 587);
+  const secure = isGmail ? true : (smtp.secure || false);
+
   return nodemailer.createTransport({
     host: smtp.host || 'smtp.gmail.com',
-    port: smtp.port || 587,
-    secure: smtp.secure || false,
+    port,
+    secure,
     auth: {
       user: smtp.username,
-      pass: smtp.password, // For Gmail: use App Password, not account password
+      pass: smtp.password,
     },
     tls: { rejectUnauthorized: false },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 
