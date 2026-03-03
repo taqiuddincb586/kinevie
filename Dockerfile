@@ -5,6 +5,7 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./
+ENV NODE_OPTIONS=--max-old-space-size=512
 RUN npm run build
 
 # ─── Stage 2: Production image ───────────────────────────────────────────────
