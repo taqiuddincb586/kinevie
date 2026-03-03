@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { api } from './api/client';
+import { api, emailApi } from './api/client';
 import AuthPage from './pages/AuthPage';
 
 
@@ -1230,10 +1230,15 @@ const InvoicePreview = ({ invoice }) => {
 };
 
 // ─── INVOICES ─────────────────────────────────────────────────────────────────
-const Invoices = ({ invoices, setInvoices, sessions, clinics }) => {
+const Invoices = ({ invoices, setInvoices, sessions, clinics, company }) => {
   const [generateModal, setGenerateModal] = useState(false);
   const [viewModal, setViewModal] = useState(null);
   const [emailModal, setEmailModal] = useState(null);
+  const [emailStatus, setEmailStatus] = useState(null); // null | "sending" | "sent" | "error"
+  const [emailError, setEmailError] = useState("");
+  const [emailTo, setEmailTo] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
   const [genForm, setGenForm] = useState({ clinicId: "", periodFrom: "", periodTo: "" });
   const [preview, setPreview] = useState(null);
   const [page, setPage] = useState(1);
@@ -1316,10 +1321,39 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics }) => {
 
   const del = (id) => { if (window.confirm("Delete invoice?")) setInvoices(prev => prev.filter(i => i.id !== id)); };
 
-  const sendEmail = (inv) => {
-    setInvoices(prev => prev.map(i => i.id === inv.id ? { ...i, emailSent: new Date().toISOString() } : i));
-    setEmailModal(null);
-    alert("Email simulated! In production, this would send via SMTP/SendGrid.");
+  const openEmailModal = (inv) => {
+    const clinic = clinics.find(c => c.id === inv.clinicId) || {};
+    setEmailTo(clinic.email || "");
+    setEmailSubject(`Invoice ${inv.invoiceNumber} – ${inv.clinicName}`);
+    setEmailMessage(`Hi ${clinic.contact || "there"},\n\nPlease find attached Invoice ${inv.invoiceNumber} for the period ${formatDate(inv.periodFrom)} – ${formatDate(inv.periodTo)}.\n\nAmount Due: ${formatCurrency(inv.total)}\nDue Date: ${formatDate(inv.dueDate)}\n\nPlease process payment at your earliest convenience.\n\nThank you,\nKinevie Therapeutics Inc.`);
+    setEmailStatus(null);
+    setEmailError("");
+    setEmailModal(inv);
+  };
+
+  const sendEmail = async () => {
+    const inv = emailModal;
+    if (!emailTo) { setEmailError("Recipient email is required"); return; }
+    setEmailStatus("sending");
+    setEmailError("");
+    try {
+      const clinic = clinics.find(c => c.id === inv.clinicId) || {};
+      await emailApi.send({
+        invoiceId: inv.id,
+        to: emailTo,
+        subject: emailSubject,
+        message: emailMessage,
+        invoice: inv,
+        clinicData: { address: clinic.address, contact: clinic.contact, email: clinic.email },
+        company: company || {},
+      });
+      setEmailStatus("sent");
+      setInvoices(prev => prev.map(i => i.id === inv.id ? { ...i, emailSent: new Date().toISOString() } : i));
+      setTimeout(() => { setEmailModal(null); setEmailStatus(null); }, 2000);
+    } catch (err) {
+      setEmailStatus("error");
+      setEmailError(err.message);
+    }
   };
 
   const paged = invoices.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -1368,7 +1402,7 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics }) => {
                     <div className="actions-cell">
                       <button className="btn btn-ghost btn-sm" onClick={() => setViewModal(inv)} title="View"><Icon name="eye" /></button>
                       <button className="btn btn-ghost btn-sm" title="Download PDF" onClick={() => downloadInvoicePDF(inv, clinics)}><Icon name="pdf" /></button>
-                      <button className="btn btn-ghost btn-sm" onClick={() => setEmailModal(inv)} title="Email"><Icon name="mail" /></button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => openEmailModal(inv)} title="Email"><Icon name="mail" /></button>
                       <button className="btn btn-danger btn-sm" onClick={() => del(inv.id)}><Icon name="trash" /></button>
                     </div>
                   </td>
@@ -1440,7 +1474,7 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics }) => {
         {viewModal && (
           <>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16, gap: 8 }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => setEmailModal(viewModal)}><Icon name="mail" />Email</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => openEmailModal(viewModal)}><Icon name="mail" />Email</button>
               <button className="btn btn-accent btn-sm" onClick={() => downloadInvoicePDF(viewModal, clinics)}><Icon name="pdf" />Download PDF</button>
             </div>
             <InvoicePreview invoice={viewModal} />
@@ -1449,26 +1483,46 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics }) => {
       </Modal>
 
       {/* Email Modal */}
-      <Modal open={!!emailModal} onClose={() => setEmailModal(null)} title="Share Invoice by Email"
-        footer={<><button className="btn btn-ghost" onClick={() => setEmailModal(null)}>Cancel</button><button className="btn btn-primary" onClick={() => sendEmail(emailModal)}><Icon name="mail" />Send Email</button></>}
+      <Modal open={!!emailModal} onClose={() => { if (emailStatus !== "sending") setEmailModal(null); }} title="Email Invoice to Clinic"
+        footer={
+          emailStatus === "sent" ? (
+            <div style={{ color: "#16a34a", fontWeight: 600, fontSize: 14 }}>✓ Email sent successfully!</div>
+          ) : (
+            <>
+              <button className="btn btn-ghost" onClick={() => setEmailModal(null)} disabled={emailStatus === "sending"}>Cancel</button>
+              <button className="btn btn-primary" onClick={sendEmail} disabled={emailStatus === "sending"}>
+                <Icon name="mail" />{emailStatus === "sending" ? "Sending…" : "Send Email"}
+              </button>
+            </>
+          )
+        }
       >
         {emailModal && (
           <>
+            {emailError && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", borderRadius: 8, padding: "10px 14px", fontSize: 13, marginBottom: 16 }}>
+                ⚠ {emailError}
+              </div>
+            )}
+            {emailModal.emailSent && (
+              <div className="alert alert-info" style={{ marginBottom: 16 }}>Previously sent: {new Date(emailModal.emailSent).toLocaleString()}</div>
+            )}
             <div className="form-group">
-              <label className="form-label">To</label>
-              <input className="form-input" defaultValue={clinics.find(c => c.id === emailModal.clinicId)?.email || ""} />
+              <label className="form-label">To *</label>
+              <input className="form-input" value={emailTo} onChange={e => setEmailTo(e.target.value)} placeholder="clinic@example.com" />
             </div>
             <div className="form-group">
               <label className="form-label">Subject</label>
-              <input className="form-input" defaultValue={`Invoice ${emailModal.invoiceNumber} – ${emailModal.clinicName}`} />
+              <input className="form-input" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
             </div>
             <div className="form-group">
               <label className="form-label">Message</label>
-              <textarea className="form-textarea" defaultValue={`Hi ${clinics.find(c => c.id === emailModal.clinicId)?.contact || "there"},\n\nPlease find attached Invoice ${emailModal.invoiceNumber} for the period ${formatDate(emailModal.periodFrom)} – ${formatDate(emailModal.periodTo)}.\n\nTotal: ${formatCurrency(emailModal.total)}\nDue: ${formatDate(emailModal.dueDate)}\n\nThank you,\nKinevie Therapeutics Inc.`} />
+              <textarea className="form-textarea" rows={7} value={emailMessage} onChange={e => setEmailMessage(e.target.value)} />
             </div>
-            {emailModal.emailSent && (
-              <div className="alert alert-info">Previously sent: {new Date(emailModal.emailSent).toLocaleString()}</div>
-            )}
+            <div style={{ background: "#f0e8d8", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#7a6247", display: "flex", alignItems: "center", gap: 8 }}>
+              <span>📎</span>
+              <span>Invoice <strong>{emailModal.invoiceNumber}</strong> will be attached as a PDF to this email.</span>
+            </div>
           </>
         )}
       </Modal>
@@ -1836,23 +1890,23 @@ const Settings = ({ smtp, setSmtp, company, setCompany }) => {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const handleTest = () => {
-    if (!smtp.configured && !(smtp.host && smtp.username && smtp.password)) {
+  const handleTest = async () => {
+    if (!(smtp.host && smtp.username && smtp.password)) {
       setTestStatus("error");
-      setTestMsg("Please fill in all required SMTP fields and save first.");
+      setTestMsg("Please fill in SMTP host, username, and password, then Save before testing.");
       return;
     }
     setTestStatus("testing");
     setTestMsg("Connecting to SMTP server…");
-    // Simulate test
-    setTimeout(() => {
-      const ok = smtp.host && smtp.username && smtp.password && smtp.fromEmail;
-      setTestStatus(ok ? "success" : "error");
-      setTestMsg(ok
-        ? `Connection successful! Test email sent to ${smtp.testEmail || smtp.fromEmail}.`
-        : "Connection failed. Please check your credentials and try again."
-      );
-    }, 2000);
+    try {
+      const result = await emailApi.test();
+      setTestStatus("success");
+      setTestMsg(result.message || `Test email sent to ${smtp.testEmail || smtp.username}`);
+      setSmtp(s => ({ ...s, configured: true }));
+    } catch (err) {
+      setTestStatus("error");
+      setTestMsg(err.message || "Connection failed. Check your credentials.");
+    }
   };
 
   const smtpStatusClass = testStatus === "success" ? "connected" : testStatus === "testing" ? "testing" : smtp.configured ? "connected" : "disconnected";
@@ -1886,8 +1940,18 @@ const Settings = ({ smtp, setSmtp, company, setCompany }) => {
                 ))}
               </div>
               {smtp.provider === "gmail" && (
-                <div className="alert alert-info" style={{ fontSize: 12 }}>
-                  <strong>Gmail users:</strong> Use your Gmail address as the username and an <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noreferrer" style={{ color: "#1d4ed8" }}>App Password</a> (not your regular password). 2FA must be enabled on your Google account.
+                <div style={{ background: "#f0e8d8", border: "1px solid #e0d4c0", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#3d2410", marginBottom: 8 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Gmail Setup — Required Steps</div>
+                  <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
+                    <li>Go to your Google Account → <strong>Security</strong></li>
+                    <li>Enable <strong>2-Step Verification</strong> (required)</li>
+                    <li>Search for <strong>"App passwords"</strong> in Google settings</li>
+                    <li>Create a new App Password — select <em>Mail</em> and <em>Other (Custom name)</em> → type "Kinevie"</li>
+                    <li>Copy the <strong>16-character password</strong> Google gives you</li>
+                    <li>Enter your Gmail address as <strong>Username</strong> below</li>
+                    <li>Paste the 16-character code as the <strong>Password</strong> (NOT your regular Gmail password)</li>
+                  </ol>
+                  <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: "#c9a96e", fontWeight: 600 }}>→ Open Google App Passwords page</a>
                 </div>
               )}
               {smtp.provider === "sendgrid" && (
@@ -2259,7 +2323,7 @@ function MainApp() {
             {page === 'dashboard'  && <Dashboard sessions={sessions} invoices={invoices} expenses={expenses} clinics={clinics} />}
             {page === 'clinics'    && <Clinics clinics={clinics} setClinics={setClinics} />}
             {page === 'sessions'   && <Sessions sessions={sessions} setSessions={setSessions} clinics={clinics} />}
-            {page === 'invoices'   && <Invoices invoices={invoices} setInvoices={setInvoices} sessions={sessions} clinics={clinics} />}
+            {page === 'invoices'   && <Invoices invoices={invoices} setInvoices={setInvoices} sessions={sessions} clinics={clinics} company={company} />}
             {page === 'expenses'   && <Expenses expenses={expenses} setExpenses={setExpenses} />}
             {page === 'import'     && <CSVImport sessions={sessions} setSessions={setSessions} clinics={clinics} setClinics={setClinics} />}
             {page === 'settings'   && <Settings smtp={smtp} setSmtp={setSmtp} company={company} setCompany={setCompany} />}

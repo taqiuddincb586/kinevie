@@ -36,6 +36,7 @@ app.use('/api/invoices', require('./routes/invoices'));
 const { expensesRouter, settingsRouter } = require('./routes/other');
 app.use('/api/expenses', expensesRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/email', require('./routes/email'));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));

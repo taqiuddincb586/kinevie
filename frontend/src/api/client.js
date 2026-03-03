@@ -62,3 +62,9 @@ export const api = {
   getSettings: () => request('GET', '/settings'),
   saveSettings: (b) => request('PUT', '/settings', b),
 };
+
+// Email
+export const emailApi = {
+  send: (body) => request('POST', '/email/send', body),
+  test: () => request('POST', '/email/test', {}),
+};
