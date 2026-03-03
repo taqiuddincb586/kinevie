@@ -11,13 +11,16 @@ const PORT = process.env.PORT || 3001;
 
 // ─── SECURITY MIDDLEWARE ──────────────────────────────────────────────────────
 app.use(helmet({
-  contentSecurityPolicy: false, // frontend handles its own CSP
+  contentSecurityPolicy: false,
 }));
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   credentials: true,
 }));
+
+// Trust Railway's reverse proxy
+app.set('trust proxy', 1);
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
