@@ -1102,6 +1102,7 @@ const Clinics = ({ clinics, setClinics }) => {
             <label className="form-label">Clinic Name *</label>
             <input className="form-input" value={form.name || ""} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
           </div>
+          {editing && (
           <div className="form-group">
             <label className="form-label">Status</label>
             <select className="form-select" value={form.status || "active"} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
@@ -1109,6 +1110,7 @@ const Clinics = ({ clinics, setClinics }) => {
               <option value="inactive">Inactive</option>
             </select>
           </div>
+          )}
         </div>
         <div className="form-grid">
           <div className="form-group">
@@ -2814,6 +2816,30 @@ function MainApp() {
   const [smtp, setSmtpRaw] = useState(INITIAL_SMTP);
   const [company, setCompanyRaw] = useState(INITIAL_COMPANY);
   const [pendingCount, setPendingCount] = useState(0);
+  const [weather, setWeather] = useState(null);
+
+  // Fetch location + weather on mount
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      try {
+        // Open-Meteo: free, no API key
+        const [wRes, gRes] = await Promise.all([
+          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&temperature_unit=celsius`),
+          fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`),
+        ]);
+        const [wData, gData] = await Promise.all([wRes.json(), gRes.json()]);
+        const city = gData.address?.city || gData.address?.town || gData.address?.village || gData.address?.county || '';
+        const country = gData.address?.country_code?.toUpperCase() || '';
+        const temp = Math.round(wData.current?.temperature_2m);
+        const code = wData.current?.weather_code;
+        const icon = code <= 1 ? '☀️' : code <= 3 ? '⛅' : code <= 48 ? '🌫️' : code <= 67 ? '🌧️' : code <= 77 ? '❄️' : code <= 82 ? '🌦️' : '⛈️';
+        setWeather({ city, country, temp, icon });
+      } catch(e) {}
+    }, () => {});
+  }, []);
+
 
   const [themeId, setThemeId] = useState(() => {
     try { const u = JSON.parse(localStorage.getItem('kinevie_user')); return u?.theme || DEFAULT_THEME_ID; } catch { return DEFAULT_THEME_ID; }
@@ -3001,7 +3027,7 @@ function MainApp() {
             </button>
             <div style={{ fontSize: 10, color: 'rgba(196,168,130,0.5)', textAlign: 'center', letterSpacing: '0.5px', borderTop: '1px solid rgba(196,168,130,0.15)', paddingTop: 10 }}>
               Developed by<br/>
-              <a href="https://www.crossbolt.ca/" target="_blank" rel="noreferrer" style={{ fontWeight: 600, color: 'rgba(196,168,130,0.8)', textDecoration: 'none' }}>Crossbolt Technologies Inc.</a>
+              <a href="https://www.crossbolt.ca/" target="_blank" rel="noreferrer" style={{ fontWeight: 600, color: 'rgba(196,168,130,0.8)', textDecoration: 'underline' }}>Crossbolt Technologies Inc.</a>
             </div>
           </div>
         </aside>
@@ -3010,7 +3036,18 @@ function MainApp() {
           <div className="topbar">
             <div>
               <div className="topbar-title">{title}</div>
-              <div className="topbar-sub">{subtitle}</div>
+              {page === 'dashboard' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 2 }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{subtitle}</span>
+                  {weather && (
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', background: 'var(--table-head-bg)', border: '1px solid var(--border)', borderRadius: 20, padding: '2px 10px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      {weather.icon} {weather.temp}°C · {weather.city}{weather.country ? `, ${weather.country}` : ''}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="topbar-sub">{subtitle}</div>
+              )}
             </div>
             <div className="topbar-actions">
               <div style={{ fontSize: 12, color: '#64748b', background: '#f8fafc', padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0' }}>

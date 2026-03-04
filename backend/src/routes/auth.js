@@ -41,7 +41,7 @@ async function sendEmail({ to, subject, html }) {
 const B = (c) => `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;"><div style="background:#7a6248;padding:20px 28px;border-radius:8px 8px 0 0;"><h1 style="color:#c4a882;margin:0;font-size:22px;font-family:Georgia,serif;">Kinevie <span style="font-size:14px;font-weight:400;opacity:0.7">Lite</span></h1><p style="color:rgba(253,245,232,0.6);margin:2px 0 0;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;">Smart Practice Manager</p></div><div style="background:#fdf8f2;padding:28px;border:1px solid #ddd0b8;border-top:none;border-radius:0 0 8px 8px;">${c}</div><p style="text-align:center;font-size:11px;color:#94a3b8;margin-top:12px;">Developed by <a href="https://www.crossbolt.ca" style="color:#c4a882;">Crossbolt Technologies Inc.</a></p></div>`;
 
 // REGISTER
-router.post('/register', [body('email').isEmail().normalizeEmail(), body('password').isLength({min:8}), body('fullName').trim().isLength({min:2})],
+router.post('/register', [body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }), body('password').isLength({min:8}), body('fullName').trim().isLength({min:2})],
 async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -73,7 +73,7 @@ async (req, res) => {
 });
 
 // LOGIN
-router.post('/login', [body('email').isEmail().normalizeEmail(), body('password').notEmpty()],
+router.post('/login', [body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }), body('password').notEmpty()],
 async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
