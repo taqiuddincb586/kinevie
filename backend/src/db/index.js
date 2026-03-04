@@ -17,6 +17,7 @@ const SCHEMA = `
     password    TEXT NOT NULL,
     full_name   TEXT NOT NULL,
     rmt_number  TEXT,
+    role        TEXT DEFAULT 'practitioner' CHECK (role IN ('administrator', 'practitioner')),
     created_at  TIMESTAMPTZ DEFAULT NOW(),
     updated_at  TIMESTAMPTZ DEFAULT NOW()
   );
@@ -90,6 +91,8 @@ const SCHEMA = `
     company     JSONB DEFAULT '{}',
     updated_at  TIMESTAMPTZ DEFAULT NOW()
   );
+
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'practitioner' CHECK (role IN ('administrator', 'practitioner'));
 
   CREATE INDEX IF NOT EXISTS idx_clinics_user   ON clinics(user_id);
   CREATE INDEX IF NOT EXISTS idx_sessions_user  ON sessions(user_id);
