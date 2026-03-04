@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { api, emailApi } from './api/client';
+import { api, emailApi, authApi } from './api/client';
 import AuthPage from './pages/AuthPage';
 
 
@@ -22,6 +22,17 @@ const COLORS = {
   textMuted: "#8a7055",
 };
 
+
+
+// ─── COUNTRIES & CURRENCIES ──────────────────────────────────────────────────
+const COUNTRIES = [
+  { code: 'CA', name: 'Canada', currency: 'CAD', symbol: 'CA$', provinces: ['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon'] },
+  { code: 'US', name: 'United States', currency: 'USD', symbol: '$', provinces: ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming','District of Columbia'] },
+  { code: 'GB', name: 'United Kingdom', currency: 'GBP', symbol: '£', provinces: ['England','Scotland','Wales','Northern Ireland'] },
+  { code: 'AU', name: 'Australia', currency: 'AUD', symbol: 'A$', provinces: ['Australian Capital Territory','New South Wales','Northern Territory','Queensland','South Australia','Tasmania','Victoria','Western Australia'] },
+  { code: 'IN', name: 'India', currency: 'INR', symbol: '₹', provinces: ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi'] },
+  { code: 'AE', name: 'UAE', currency: 'AED', symbol: 'AED', provinces: ['Abu Dhabi','Ajman','Dubai','Fujairah','Ras Al Khaimah','Sharjah','Umm Al Quwain'] },
+];
 
 // ─── THEMES ───────────────────────────────────────────────────────────────────
 const THEMES = [
@@ -331,7 +342,12 @@ const addWorkingDays = (dateStr, days) => {
   return date.toISOString().split("T")[0];
 };
 
-const formatCurrency = (n) => `$${parseFloat(n || 0).toFixed(2)}`;
+const formatCurrency = (n, currency) => {
+  const num = parseFloat(n || 0).toFixed(2);
+  const country = COUNTRIES.find(c => c.currency === currency);
+  const sym = country ? country.symbol : '$';
+  return `${sym}${num}`;
+};
 
 const formatDate = (d) => {
   if (!d) return "";
@@ -989,14 +1005,14 @@ const Clinics = ({ clinics, setClinics }) => {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: "", address: "", contact: "", phone: "", email: "", billingCycle: "bi-weekly", status: "active" });
+    setForm({ name: "", country: "CA", address: "", city: "", province: "", postalCode: "", contact: "", phone: "", email: "", billingCycle: "bi-weekly", status: "active" });
     setRates([{ duration: "", rate: "" }]);
     setModal(true);
   };
 
   const openEdit = (c) => {
     setEditing(c.id);
-    setForm({ name: c.name, address: c.address, contact: c.contact, phone: c.phone, email: c.email, billingCycle: c.billingCycle, status: c.status });
+    setForm({ name: c.name, country: c.country||"CA", address: c.address||"", city: c.city||"", province: c.province||"", postalCode: c.postalCode||"", contact: c.contact, phone: c.phone, email: c.email, billingCycle: c.billingCycle, status: c.status });
     setRates(c.rates.map(r => ({ duration: String(r.duration), rate: String(r.rate) })));
     setModal(true);
   };
@@ -1048,7 +1064,7 @@ const Clinics = ({ clinics, setClinics }) => {
                 <tr key={c.id}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{c.name}</div>
-                    <div style={{ fontSize: 12, color: "#64748b" }}>{c.address}</div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>{[c.address, c.city, c.province, c.country].filter(Boolean).join(", ")}</div>
                   </td>
                   <td>
                     <div>{c.contact}</div>
@@ -1094,9 +1110,34 @@ const Clinics = ({ clinics, setClinics }) => {
             </select>
           </div>
         </div>
+        <div className="form-grid">
+          <div className="form-group">
+            <label className="form-label">Country *</label>
+            <select className="form-select" value={form.country||"CA"} onChange={e => setForm(f => ({ ...f, country: e.target.value, province: "" }))}>
+              {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name} ({c.currency})</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">City *</label>
+            <input className="form-input" value={form.city||""} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="e.g. Toronto" />
+          </div>
+        </div>
         <div className="form-group">
-          <label className="form-label">Address</label>
-          <input className="form-input" value={form.address || ""} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+          <label className="form-label">Street Address</label>
+          <input className="form-input" value={form.address||""} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="123 Main St" />
+        </div>
+        <div className="form-grid">
+          <div className="form-group">
+            <label className="form-label">Province / State</label>
+            <select className="form-select" value={form.province||""} onChange={e => setForm(f => ({ ...f, province: e.target.value }))}>
+              <option value="">Select...</option>
+              {(COUNTRIES.find(c=>c.code===(form.country||"CA"))?.provinces||[]).map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Postal / ZIP Code</label>
+            <input className="form-input" value={form.postalCode||""} onChange={e => setForm(f => ({ ...f, postalCode: e.target.value }))} placeholder="e.g. M5V 3A8" />
+          </div>
         </div>
         <div className="form-grid">
           <div className="form-group">
@@ -2508,7 +2549,9 @@ const NAV = [
   { id: "expenses", label: "Expenses", icon: "expense", section: "main" },
   { id: "import", label: "CSV Import", icon: "import", section: "tools" },
   { id: "settings", label: "Admin Settings", icon: "settings", section: "tools" },
+  { id: "users", label: "User Management", icon: "users", section: "tools", adminOnly: true },
 ];
+
 
 const PAGE_TITLES = {
   dashboard: ["Dashboard", ""],  // subtitle set dynamically
@@ -2518,12 +2561,251 @@ const PAGE_TITLES = {
   expenses: ["Expenses", "Track business expenses"],
   import: ["CSV Import", "Import from Google Form export"],
   settings: ["Admin Settings", "Configure email, SMTP & company info"],
+  users: ["User Management", "Approve, edit & manage users"],
+  profile: ["My Profile", "View and edit your profile"],
+
 };
 
 
 // ─── MAIN APP WITH AUTH ───────────────────────────────────────────────────────
+
+// ─── USER MANAGEMENT (Admin only) ────────────────────────────────────────────
+const UserManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editModal, setEditModal] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  const load = async () => {
+    setLoading(true);
+    try { setUsers(await authApi.getUsers()); } catch(e) {}
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const pending = users.filter(u => u.status === 'pending');
+
+  const updateStatus = async (id, status) => {
+    try {
+      await authApi.updateUserStatus(id, status);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, status } : u));
+    } catch(e) { alert(e.message); }
+  };
+
+  const saveEdit = async () => {
+    try {
+      await authApi.updateUser(editModal.id, editForm);
+      setUsers(prev => prev.map(u => u.id === editModal.id ? { ...u, ...editForm } : u));
+      setEditModal(null);
+    } catch(e) { alert(e.message); }
+  };
+
+  const deleteUser = async (u) => {
+    if (!window.confirm(`Delete ${u.fullName}? This cannot be undone.`)) return;
+    try {
+      await authApi.deleteUser(u.id);
+      setUsers(prev => prev.filter(x => x.id !== u.id));
+    } catch(e) { alert(e.message); }
+  };
+
+  const statusColor = { active: '#16a34a', pending: '#f59e0b', disabled: '#ef4444', rejected: '#94a3b8' };
+  const statusBg = { active: '#dcfce7', pending: '#fef3c7', disabled: '#fee2e2', rejected: '#f1f5f9' };
+
+  return (
+    <div>
+      {pending.length > 0 && (
+        <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🔔</span>
+          <span style={{ fontWeight: 600, color: '#92400e' }}>{pending.length} pending registration request{pending.length > 1 ? 's' : ''} awaiting your approval</span>
+        </div>
+      )}
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">All Users</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{users.length} total</span>
+        </div>
+        {loading ? <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div> : (
+          <table>
+            <thead><tr>
+              <th>Name</th><th>Email</th><th>Role</th><th>RMT #</th><th>Status</th><th>Joined</th><th>Actions</th>
+            </tr></thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.id}>
+                  <td style={{ fontWeight: 600 }}>{u.fullName}</td>
+                  <td style={{ fontSize: 13 }}>{u.email}</td>
+                  <td><span style={{ fontSize: 11, fontWeight: 700, textTransform: 'capitalize', background: u.role === 'administrator' ? '#ede9fe' : 'var(--badge-active-bg)', color: u.role === 'administrator' ? '#7c3aed' : 'var(--badge-active-text)', padding: '2px 8px', borderRadius: 10 }}>{u.role}</span></td>
+                  <td style={{ fontSize: 13 }}>{u.rmtNumber || '—'}</td>
+                  <td>
+                    <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'capitalize', background: statusBg[u.status], color: statusColor[u.status], padding: '3px 10px', borderRadius: 10 }}>{u.status}</span>
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    <div className="actions-cell">
+                      {u.status === 'pending' && <>
+                        <button className="btn btn-sm" style={{ background: '#dcfce7', color: '#16a34a', border: 'none' }} onClick={() => updateStatus(u.id, 'active')}>✓ Approve</button>
+                        <button className="btn btn-sm btn-danger" onClick={() => updateStatus(u.id, 'rejected')}>✗ Reject</button>
+                      </>}
+                      {u.status === 'active' && <button className="btn btn-sm" style={{ background: '#fee2e2', color: '#ef4444', border: 'none' }} onClick={() => updateStatus(u.id, 'disabled')}>⊘ Disable</button>}
+                      {u.status === 'disabled' && <button className="btn btn-sm" style={{ background: '#dcfce7', color: '#16a34a', border: 'none' }} onClick={() => updateStatus(u.id, 'active')}>↺ Enable</button>}
+                      <button className="btn btn-ghost btn-sm" onClick={() => { setEditModal(u); setEditForm({ fullName: u.fullName, rmtNumber: u.rmtNumber||'', role: u.role }); }}>✏</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => deleteUser(u)}>🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <Modal open={!!editModal} onClose={() => setEditModal(null)} title={`Edit: ${editModal?.fullName}`}
+        footer={<><button className="btn btn-ghost" onClick={() => setEditModal(null)}>Cancel</button><button className="btn btn-primary" onClick={saveEdit}>Save Changes</button></>}
+      >
+        <div className="form-group"><label className="form-label">Full Name</label>
+          <input className="form-input" value={editForm.fullName||''} onChange={e => setEditForm(f=>({...f,fullName:e.target.value}))} />
+        </div>
+        <div className="form-group"><label className="form-label">RMT Number</label>
+          <input className="form-input" value={editForm.rmtNumber||''} onChange={e => setEditForm(f=>({...f,rmtNumber:e.target.value}))} />
+        </div>
+        <div className="form-group"><label className="form-label">Role</label>
+          <select className="form-select" value={editForm.role||'practitioner'} onChange={e => setEditForm(f=>({...f,role:e.target.value}))}>
+            <option value="practitioner">Practitioner</option>
+            <option value="administrator">Administrator</option>
+          </select>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+// ─── USER PROFILE ─────────────────────────────────────────────────────────────
+const UserProfile = ({ themeId, saveTheme }) => {
+  const { user, updateUser } = useAuth();
+  const [editMode, setEditMode] = useState(false);
+  const [form, setForm] = useState({ fullName: user?.fullName||'', rmtNumber: user?.rmtNumber||'' });
+  const [pwMode, setPwMode] = useState(false);
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
+
+  const saveProfile = async () => {
+    setSaving(true); setErr(''); setMsg('');
+    try {
+      const updated = await authApi.updateProfile({ fullName: form.fullName, rmtNumber: form.rmtNumber });
+      updateUser(updated);
+      setMsg('Profile updated successfully!');
+      setEditMode(false);
+    } catch(e) { setErr(e.message); }
+    setSaving(false);
+  };
+
+  const changePassword = async () => {
+    if (pwForm.newPassword !== pwForm.confirmPassword) { setErr('Passwords do not match'); return; }
+    if (pwForm.newPassword.length < 8) { setErr('New password must be at least 8 characters'); return; }
+    setSaving(true); setErr(''); setMsg('');
+    try {
+      await authApi.changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
+      setMsg('Password changed successfully!');
+      setPwMode(false);
+      setPwForm({ currentPassword:'', newPassword:'', confirmPassword:'' });
+    } catch(e) { setErr(e.message); }
+    setSaving(false);
+  };
+
+  return (
+    <div style={{ maxWidth: 600 }}>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="card-header">
+          <span className="card-title">Profile Information</span>
+          {!editMode && <button className="btn btn-ghost btn-sm" onClick={() => setEditMode(true)}>✏ Edit</button>}
+        </div>
+        <div style={{ padding: 20 }}>
+          {msg && <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#16a34a', fontWeight: 600, fontSize: 13 }}>✓ {msg}</div>}
+          {err && <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#ef4444', fontSize: 13 }}>⚠ {err}</div>}
+          {!editMode ? (
+            <div>
+              {[['Full Name', user?.fullName], ['Email', user?.email], ['RMT Number', user?.rmtNumber||'—'], ['Role', user?.role], ['Account Status', user?.status]].map(([label, val]) => (
+                <div key={label} style={{ display: 'flex', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ width: 150, color: 'var(--text-muted)', fontSize: 13 }}>{label}</div>
+                  <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 13, textTransform: label === 'Role' || label === 'Account Status' ? 'capitalize' : 'none' }}>{val}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <div className="form-group"><label className="form-label">Full Name</label>
+                <input className="form-input" value={form.fullName} onChange={e => setForm(f=>({...f,fullName:e.target.value}))} />
+              </div>
+              <div className="form-group"><label className="form-label">RMT Number</label>
+                <input className="form-input" value={form.rmtNumber} onChange={e => setForm(f=>({...f,rmtNumber:e.target.value}))} placeholder="Optional" />
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn btn-ghost" onClick={() => setEditMode(false)}>Cancel</button>
+                <button className="btn btn-primary" onClick={saveProfile} disabled={saving}>{saving?'Saving…':'Save Profile'}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {user?.role === 'practitioner' && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="card-header"><span className="card-title">🎨 Theme Preference</span></div>
+          <div style={{ padding: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+              {THEMES.map(t => (
+                <div key={t.id} onClick={() => { saveTheme(t.id); }} style={{ border: `2px solid ${themeId===t.id?'var(--accent)':'var(--border)'}`, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.15s' }}>
+                  <div style={{ display: 'flex', height: 50 }}>
+                    <div style={{ width: 20, background: t.vars['--sidebar-bg'] }}/>
+                    <div style={{ flex:1, background: t.vars['--bg'], padding: 4, display:'flex', flexDirection:'column', gap:3 }}>
+                      <div style={{ height:6, width:'60%', borderRadius:2, background: t.vars['--primary'], opacity:0.7 }}/>
+                      <div style={{ flex:1, background: t.vars['--surface'], borderRadius:3, border:`1px solid ${t.vars['--border']}` }}/>
+                    </div>
+                  </div>
+                  <div style={{ padding:'6px 8px', background:'var(--surface)', borderTop:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontSize:11, fontWeight:600, color:'var(--text)' }}>{t.label}</span>
+                    {themeId===t.id && <span style={{ fontSize:10, color:'var(--accent)', fontWeight:700 }}>✓</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">Password</span>
+          {!pwMode && <button className="btn btn-ghost btn-sm" onClick={() => { setPwMode(true); setErr(''); setMsg(''); }}>🔒 Reset Password</button>}
+        </div>
+        {pwMode && (
+          <div style={{ padding: 20 }}>
+            {err && <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#ef4444', fontSize: 13 }}>⚠ {err}</div>}
+            <div className="form-group"><label className="form-label">Current Password</label>
+              <input className="form-input" type="password" value={pwForm.currentPassword} onChange={e => setPwForm(f=>({...f,currentPassword:e.target.value}))} />
+            </div>
+            <div className="form-group"><label className="form-label">New Password</label>
+              <input className="form-input" type="password" value={pwForm.newPassword} onChange={e => setPwForm(f=>({...f,newPassword:e.target.value}))} placeholder="Min. 8 characters" />
+            </div>
+            <div className="form-group"><label className="form-label">Confirm New Password</label>
+              <input className="form-input" type="password" value={pwForm.confirmPassword} onChange={e => setPwForm(f=>({...f,confirmPassword:e.target.value}))} />
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-ghost" onClick={() => setPwMode(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={changePassword} disabled={saving}>{saving?'Changing…':'Change Password'}</button>
+            </div>
+          </div>
+        )}
+        {!pwMode && <div style={{ padding: '12px 20px', color: 'var(--text-muted)', fontSize: 13 }}>Click "Reset Password" to change your password.</div>}
+      </div>
+    </div>
+  );
+};
+
 function MainApp() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [page, setPage] = useState('dashboard');
   const [clinics, setClinicsRaw] = useState([]);
   const [sessions, setSessionsRaw] = useState([]);
@@ -2531,9 +2813,21 @@ function MainApp() {
   const [expenses, setExpensesRaw] = useState([]);
   const [smtp, setSmtpRaw] = useState(INITIAL_SMTP);
   const [company, setCompanyRaw] = useState(INITIAL_COMPANY);
-  const [themeId, setThemeId] = useState(() => localStorage.getItem('kinevie-theme') || DEFAULT_THEME_ID);
+  const [pendingCount, setPendingCount] = useState(0);
 
-  useEffect(() => { applyTheme(themeId); localStorage.setItem('kinevie-theme', themeId); }, [themeId]);
+  const [themeId, setThemeId] = useState(() => {
+    try { const u = JSON.parse(localStorage.getItem('kinevie_user')); return u?.theme || DEFAULT_THEME_ID; } catch { return DEFAULT_THEME_ID; }
+  });
+
+  useEffect(() => { applyTheme(themeId); }, [themeId]);
+
+  const saveTheme = async (tid) => {
+    setThemeId(tid);
+    try {
+      const updated = await authApi.updateProfile({ theme: tid });
+      updateUser(updated);
+    } catch(e) {}
+  };
   const [dataLoaded, setDataLoaded] = useState(false);
 
   // Load all data on mount
@@ -2553,6 +2847,12 @@ function MainApp() {
       if (settings.smtp && Object.keys(settings.smtp).length) setSmtpRaw({ ...INITIAL_SMTP, ...settings.smtp });
       if (settings.company && Object.keys(settings.company).length) setCompanyRaw({ ...INITIAL_COMPANY, ...settings.company });
       setDataLoaded(true);
+      // Load pending user count for admin
+      if (user?.role === 'administrator') {
+        authApi.getUsers().then(users => {
+          setPendingCount(users.filter(u => u.status === 'pending').length);
+        }).catch(()=>{});
+      }
     }).catch(console.error);
   }, [user]);
 
@@ -2680,10 +2980,13 @@ function MainApp() {
               </div>
             ))}
             <div className="nav-section-label">Tools</div>
-            {NAV.filter(n => n.section === 'tools' && (n.id !== 'settings' || user?.role === 'administrator')).map(n => (
-              <div key={n.id} className={`nav-item${page === n.id ? ' active' : ''}`} onClick={() => setPage(n.id)}>
+            {NAV.filter(n => n.section === 'tools' && (n.id !== 'settings' || user?.role === 'administrator') && (n.id !== 'users' || user?.role === 'administrator')).map(n => (
+              <div key={n.id} className={`nav-item${page === n.id ? ' active' : ''}`} onClick={() => setPage(n.id)} style={{ position: 'relative' }}>
                 <Icon name={n.icon} />
                 {n.label}
+                {n.id === 'users' && pendingCount > 0 && (
+                  <span style={{ marginLeft: 'auto', background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{pendingCount}</span>
+                )}
               </div>
             ))}
           </nav>
@@ -2713,6 +3016,9 @@ function MainApp() {
               <div style={{ fontSize: 12, color: '#64748b', background: '#f8fafc', padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0' }}>
                 {sessions.length} sessions · {invoices.length} invoices · {clinics.filter(c => c.status === 'active').length} active clinics
               </div>
+              <button onClick={() => setPage('profile')} title="My Profile" style={{ background: 'var(--accent)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: 'var(--accent-text)', fontWeight: 700, flexShrink: 0 }}>
+                {user?.fullName?.charAt(0)?.toUpperCase() || '?'}
+              </button>
               {smtp.configured && (
                 <div style={{ fontSize: 11, color: '#16a34a', background: '#dcfce7', padding: '4px 10px', borderRadius: 6, border: '1px solid #bbf7d0', fontWeight: 600 }}>
                   ✓ Email ready
@@ -2727,8 +3033,10 @@ function MainApp() {
             {page === 'invoices'   && <Invoices invoices={invoices} setInvoices={setInvoices} sessions={sessions} clinics={clinics} company={company} />}
             {page === 'expenses'   && <Expenses expenses={expenses} setExpenses={setExpenses} />}
             {page === 'import'     && <CSVImport sessions={sessions} setSessions={setSessions} clinics={clinics} setClinics={setClinics} />}
-            {page === 'settings' && user?.role === 'administrator' && <Settings smtp={smtp} setSmtp={setSmtp} company={company} setCompany={setCompany} themeId={themeId} setThemeId={setThemeId} />}
+            {page === 'settings' && user?.role === 'administrator' && <Settings smtp={smtp} setSmtp={setSmtp} company={company} setCompany={setCompany} themeId={themeId} setThemeId={saveTheme} />}
             {page === 'settings' && user?.role !== 'administrator' && <div style={{padding:40,textAlign:'center',color:'var(--text-muted)'}}>⛔ Admin access required.</div>}
+            {page === 'users' && user?.role === 'administrator' && <UserManagement />}
+            {page === 'profile' && <UserProfile themeId={themeId} saveTheme={saveTheme} />}
           </div>
         </div>
       </div>

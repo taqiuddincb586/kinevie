@@ -18,24 +18,29 @@ export function AuthProvider({ children }) {
       localStorage.setItem('kinevie_user', JSON.stringify(data.user));
       setUser(data.user);
       return data.user;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally { setLoading(false); }
+    } catch (err) { setError(err.message); throw err; }
+    finally { setLoading(false); }
   }, []);
 
   const register = useCallback(async (fields) => {
     setLoading(true); setError(null);
     try {
       const data = await api.register(fields);
+      if (data.pending) return { pending: true, message: data.message };
       localStorage.setItem('kinevie_token', data.token);
       localStorage.setItem('kinevie_user', JSON.stringify(data.user));
       setUser(data.user);
       return data.user;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally { setLoading(false); }
+    } catch (err) { setError(err.message); throw err; }
+    finally { setLoading(false); }
+  }, []);
+
+  const updateUser = useCallback((updates) => {
+    setUser(prev => {
+      const next = { ...prev, ...updates };
+      localStorage.setItem('kinevie_user', JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   const logout = useCallback(() => {
@@ -45,7 +50,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

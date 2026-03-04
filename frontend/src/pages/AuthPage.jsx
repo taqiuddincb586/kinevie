@@ -1,3 +1,4 @@
+import { authApi } from '../api/client';
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -167,6 +168,15 @@ const styles = `
 
 export default function AuthPage() {
   const [tab, setTab] = useState('login');
+  const [fpStep, setFpStep] = useState(0); // 0=off 1=email 2=otp 3=newpw 4=done
+  const [fpEmail, setFpEmail] = useState('');
+  const [fpOtp, setFpOtp] = useState('');
+  const [fpPw, setFpPw] = useState('');
+  const [fpPw2, setFpPw2] = useState('');
+  const [fpMsg, setFpMsg] = useState('');
+  const [fpErr, setFpErr] = useState('');
+  const [fpLoading, setFpLoading] = useState(false);
+  const [regPending, setRegPending] = useState(false);
   const { login, register, loading, error } = useAuth();
   const [localError, setLocalError] = useState('');
 
@@ -193,19 +203,43 @@ export default function AuthPage() {
       return setLocalError('Password must be at least 8 characters');
     }
     try {
-      await register({
+      const result = await register({
         email: regForm.email,
         password: regForm.password,
         fullName: regForm.fullName,
         rmtNumber: regForm.rmtNumber,
         role: regForm.role,
       });
+      if (result?.pending) { setRegPending(true); }
     } catch (err) {
       setLocalError(err.message);
     }
   };
 
   const displayError = localError || error;
+
+  const fpSendOtp = async () => {
+    setFpLoading(true); setFpErr('');
+    try { await authApi.forgotPassword(fpEmail); setFpStep(2); setFpMsg('OTP sent! Check your email.'); }
+    catch(e) { setFpErr(e.message); }
+    setFpLoading(false);
+  };
+
+  const fpVerify = async () => {
+    setFpLoading(true); setFpErr('');
+    try { await authApi.verifyOtp(fpEmail, fpOtp); setFpStep(3); setFpMsg(''); }
+    catch(e) { setFpErr(e.message); }
+    setFpLoading(false);
+  };
+
+  const fpReset = async () => {
+    if (fpPw !== fpPw2) { setFpErr('Passwords do not match'); return; }
+    if (fpPw.length < 8) { setFpErr('Password must be at least 8 characters'); return; }
+    setFpLoading(true); setFpErr('');
+    try { await authApi.resetPassword(fpEmail, fpOtp, fpPw); setFpStep(4); }
+    catch(e) { setFpErr(e.message); }
+    setFpLoading(false);
+  };
 
   return (
     <>
@@ -226,7 +260,15 @@ export default function AuthPage() {
             </button>
           </div>
 
-          {displayError && <div className="auth-error">⚠ {displayError}</div>}
+          {regPending && (
+            <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'center' }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>📬</div>
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 4 }}>Registration Submitted!</div>
+              <div style={{ fontSize: 13, color: '#166534' }}>Your account is pending administrator approval. You'll receive an email once approved.</div>
+              <button style={{ marginTop: 12, background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', fontSize: 13 }} onClick={() => { setRegPending(false); setTab('login'); }}>← Back to Sign In</button>
+            </div>
+          )}
+          {!regPending && displayError && <div className="auth-error">⚠ {displayError}</div>}
 
           {tab === 'login' ? (
             <form onSubmit={handleLogin} autoComplete="on">
@@ -257,6 +299,11 @@ export default function AuthPage() {
               <button className="auth-btn" type="submit" disabled={loading}>
                 {loading ? 'Signing in…' : 'Sign In →'}
               </button>
+              <div style={{ textAlign: 'center', marginTop: 12 }}>
+                <button type="button" onClick={() => { setFpStep(1); setFpEmail(''); setFpErr(''); setFpMsg(''); }} style={{ background: 'none', border: 'none', color: C.accent, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+                  Forgot Password?
+                </button>
+              </div>
               <div className="auth-divider">Don't have an account? Click <strong>Create Account</strong> above.</div>
             </form>
           ) : (
@@ -354,6 +401,72 @@ export default function AuthPage() {
           )}
         </div>
       </div>
+      {fpStep > 0 && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '40px 36px', maxWidth: 420, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>{fpStep === 4 ? '✅' : '🔒'}</div>
+              <h2 style={{ margin: 0, color: C.text, fontSize: 20 }}>
+                {fpStep === 1 && 'Forgot Password'}{fpStep === 2 && 'Enter OTP'}{fpStep === 3 && 'New Password'}{fpStep === 4 && 'Password Reset!'}
+              </h2>
+            </div>
+            {fpMsg && <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 12px', marginBottom: 14, color: '#16a34a', fontSize: 13, fontWeight: 600 }}>✓ {fpMsg}</div>}
+            {fpErr && <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 12px', marginBottom: 14, color: '#ef4444', fontSize: 13 }}>⚠ {fpErr}</div>}
+
+            {fpStep === 1 && (
+              <div>
+                <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>Enter your registered email address and we'll send you a 6-digit OTP.</p>
+                <div className="auth-form-group">
+                  <label className="auth-label">Email Address</label>
+                  <input className="auth-input" type="email" value={fpEmail} onChange={e => setFpEmail(e.target.value)} placeholder="you@example.com" />
+                </div>
+                <button className="auth-btn" onClick={fpSendOtp} disabled={fpLoading || !fpEmail}>{fpLoading ? 'Sending…' : 'Send OTP →'}</button>
+              </div>
+            )}
+
+            {fpStep === 2 && (
+              <div>
+                <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>Enter the 6-digit OTP sent to <strong>{fpEmail}</strong></p>
+                <div className="auth-form-group">
+                  <label className="auth-label">6-Digit OTP</label>
+                  <input className="auth-input" type="text" value={fpOtp} onChange={e => setFpOtp(e.target.value)} placeholder="123456" maxLength={6} style={{ fontSize: 24, textAlign: 'center', letterSpacing: 8 }} />
+                </div>
+                <button className="auth-btn" onClick={fpVerify} disabled={fpLoading || fpOtp.length < 6}>{fpLoading ? 'Verifying…' : 'Verify OTP →'}</button>
+                <div style={{ textAlign: 'center', marginTop: 10 }}>
+                  <button type="button" onClick={() => { setFpStep(1); setFpOtp(''); }} style={{ background:'none', border:'none', color:C.muted, fontSize:12, cursor:'pointer' }}>Resend OTP</button>
+                </div>
+              </div>
+            )}
+
+            {fpStep === 3 && (
+              <div>
+                <div className="auth-form-group">
+                  <label className="auth-label">New Password</label>
+                  <input className="auth-input" type="password" value={fpPw} onChange={e => setFpPw(e.target.value)} placeholder="Min. 8 characters" />
+                </div>
+                <div className="auth-form-group">
+                  <label className="auth-label">Confirm New Password</label>
+                  <input className="auth-input" type="password" value={fpPw2} onChange={e => setFpPw2(e.target.value)} />
+                </div>
+                <button className="auth-btn" onClick={fpReset} disabled={fpLoading}>{fpLoading ? 'Resetting…' : 'Reset Password →'}</button>
+              </div>
+            )}
+
+            {fpStep === 4 && (
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ color: C.muted, fontSize: 13 }}>Your password has been reset. A confirmation email has been sent.</p>
+                <button className="auth-btn" onClick={() => setFpStep(0)}>Back to Login</button>
+              </div>
+            )}
+
+            {fpStep < 4 && (
+              <div style={{ textAlign: 'center', marginTop: 16 }}>
+                <button type="button" onClick={() => setFpStep(0)} style={{ background:'none', border:'none', color:C.muted, fontSize:12, cursor:'pointer' }}>← Cancel</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

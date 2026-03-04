@@ -94,6 +94,24 @@ const SCHEMA = `
 
   ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'practitioner' CHECK (role IN ('administrator', 'practitioner'));
 
+
+  -- Registration approval workflow
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'disabled', 'rejected'));
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS theme TEXT DEFAULT 'warm-beige';
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS login_attempts INTEGER DEFAULT 0;
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
+
+  -- OTP for password reset
+  CREATE TABLE IF NOT EXISTS otp_tokens (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email       TEXT NOT NULL,
+    token       TEXT NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used        BOOLEAN DEFAULT FALSE,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_tokens(email);
   CREATE INDEX IF NOT EXISTS idx_clinics_user   ON clinics(user_id);
   CREATE INDEX IF NOT EXISTS idx_sessions_user  ON sessions(user_id);
   CREATE INDEX IF NOT EXISTS idx_sessions_date  ON sessions(date);
@@ -105,6 +123,8 @@ async function initDB() {
   const client = await pool.connect();
   try {
     await client.query(SCHEMA);
+    // Make existing users active if they have no status set
+    await client.query("UPDATE users SET status = 'active' WHERE status IS NULL OR status = 'pending' AND created_at < NOW() - INTERVAL '1 day'");
     console.log('✅ Database schema initialized');
   } finally {
     client.release();

@@ -68,3 +68,17 @@ export const emailApi = {
   send: (body) => request('POST', '/email/send', body),
   test: () => request('POST', '/email/test', {}),
 };
+
+// Auth extended
+export const authApi = {
+  updateProfile: (b) => request('PUT', '/auth/profile', b),
+  changePassword: (b) => request('PUT', '/auth/change-password', b),
+  forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
+  verifyOtp: (email, otp) => request('POST', '/auth/verify-otp', { email, otp }),
+  resetPassword: (email, otp, newPassword) => request('POST', '/auth/reset-password', { email, otp, newPassword }),
+  // Admin
+  getUsers: () => request('GET', '/auth/users'),
+  updateUserStatus: (id, status) => request('PUT', `/auth/users/${id}/status`, { status }),
+  updateUser: (id, b) => request('PUT', `/auth/users/${id}`, b),
+  deleteUser: (id) => request('DELETE', `/auth/users/${id}`),
+};
