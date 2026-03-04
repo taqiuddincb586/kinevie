@@ -9,18 +9,199 @@ import AuthPage from './pages/AuthPage';
 // Color palette: Deep slate + warm amber accents + clean whites
 
 const COLORS = {
-  primary: "#3b1f0e",
-  accent: "#c9a96e",
+  primary: "#8a7258",
+  accent: "#c4a882",
   accentLight: "#f5ede0",
   success: "#22c55e",
   danger: "#ef4444",
   warning: "#f59e0b",
-  bg: "#f2ebe0",
+  bg: "#f5ede0",
   surface: "#fdf8f2",
-  border: "#e0d4c0",
-  text: "#2c1a0e",
-  textMuted: "#7a6247",
+  border: "#ddd0b8",
+  text: "#3d2e1a",
+  textMuted: "#8a7055",
 };
+
+
+// ─── THEMES ───────────────────────────────────────────────────────────────────
+const THEMES = [
+  {
+    id: 'warm-beige',
+    label: 'Warm Beige',
+    preview: ['#7a6248', '#c4a882', '#f5ede0'],
+    vars: {
+      '--sidebar-bg': '#7a6248',
+      '--sidebar-text': '#fdf5e8',
+      '--sidebar-accent': '#c4a882',
+      '--sidebar-active-bg': 'rgba(196,168,130,0.25)',
+      '--sidebar-hover-bg': 'rgba(196,168,130,0.12)',
+      '--sidebar-border': 'rgba(196,168,130,0.2)',
+      '--primary': '#8a7258',
+      '--primary-hover': '#9a8268',
+      '--accent': '#c4a882',
+      '--accent-hover': '#b09060',
+      '--accent-text': '#3d2e1a',
+      '--bg': '#f5ede0',
+      '--surface': '#fdf8f2',
+      '--border': '#ddd0b8',
+      '--text': '#3d2e1a',
+      '--text-muted': '#8a7055',
+      '--table-head-bg': '#f0e4d0',
+      '--badge-active-bg': '#ecdec8',
+      '--badge-active-text': '#6b5a3e',
+      '--nav-label': 'rgba(253,245,232,0.35)',
+      '--nav-text': 'rgba(253,245,232,0.65)',
+    }
+  },
+  {
+    id: 'slate-blue',
+    label: 'Slate Blue',
+    preview: ['#1e3a5f', '#4a90d9', '#f0f4f8'],
+    vars: {
+      '--sidebar-bg': '#1e3a5f',
+      '--sidebar-text': '#e8f0fb',
+      '--sidebar-accent': '#4a90d9',
+      '--sidebar-active-bg': 'rgba(74,144,217,0.22)',
+      '--sidebar-hover-bg': 'rgba(74,144,217,0.1)',
+      '--sidebar-border': 'rgba(74,144,217,0.2)',
+      '--primary': '#1e3a5f',
+      '--primary-hover': '#2a4f80',
+      '--accent': '#4a90d9',
+      '--accent-hover': '#3a7bc8',
+      '--accent-text': '#ffffff',
+      '--bg': '#f0f4f8',
+      '--surface': '#ffffff',
+      '--border': '#d0dce8',
+      '--text': '#1a2e45',
+      '--text-muted': '#5a7a99',
+      '--table-head-bg': '#e8f0f8',
+      '--badge-active-bg': '#dbeafe',
+      '--badge-active-text': '#1d4ed8',
+      '--nav-label': 'rgba(232,240,251,0.35)',
+      '--nav-text': 'rgba(232,240,251,0.65)',
+    }
+  },
+  {
+    id: 'forest-green',
+    label: 'Forest Green',
+    preview: ['#1a4a2e', '#4caf7d', '#f0f7f2'],
+    vars: {
+      '--sidebar-bg': '#1a4a2e',
+      '--sidebar-text': '#e8f5ee',
+      '--sidebar-accent': '#4caf7d',
+      '--sidebar-active-bg': 'rgba(76,175,125,0.22)',
+      '--sidebar-hover-bg': 'rgba(76,175,125,0.1)',
+      '--sidebar-border': 'rgba(76,175,125,0.2)',
+      '--primary': '#1a4a2e',
+      '--primary-hover': '#245a38',
+      '--accent': '#4caf7d',
+      '--accent-hover': '#3d9e6a',
+      '--accent-text': '#0f2d1e',
+      '--bg': '#f0f7f2',
+      '--surface': '#f7fbf8',
+      '--border': '#c8dfd1',
+      '--text': '#0f2d1e',
+      '--text-muted': '#4a7a5e',
+      '--table-head-bg': '#e0f0e8',
+      '--badge-active-bg': '#d4ead9',
+      '--badge-active-text': '#1a4a2e',
+      '--nav-label': 'rgba(232,245,238,0.35)',
+      '--nav-text': 'rgba(232,245,238,0.65)',
+    }
+  },
+  {
+    id: 'charcoal',
+    label: 'Charcoal',
+    preview: ['#2d2d2d', '#e0b84a', '#f5f5f5'],
+    vars: {
+      '--sidebar-bg': '#2d2d2d',
+      '--sidebar-text': '#f0f0f0',
+      '--sidebar-accent': '#e0b84a',
+      '--sidebar-active-bg': 'rgba(224,184,74,0.2)',
+      '--sidebar-hover-bg': 'rgba(224,184,74,0.08)',
+      '--sidebar-border': 'rgba(224,184,74,0.15)',
+      '--primary': '#2d2d2d',
+      '--primary-hover': '#404040',
+      '--accent': '#e0b84a',
+      '--accent-hover': '#c9a430',
+      '--accent-text': '#1a1a1a',
+      '--bg': '#f5f5f5',
+      '--surface': '#ffffff',
+      '--border': '#e0e0e0',
+      '--text': '#1a1a1a',
+      '--text-muted': '#707070',
+      '--table-head-bg': '#eeeeee',
+      '--badge-active-bg': '#fef3c7',
+      '--badge-active-text': '#92400e',
+      '--nav-label': 'rgba(240,240,240,0.35)',
+      '--nav-text': 'rgba(240,240,240,0.65)',
+    }
+  },
+  {
+    id: 'rose-mauve',
+    label: 'Rose Mauve',
+    preview: ['#6b3a4a', '#d4849a', '#fdf0f3'],
+    vars: {
+      '--sidebar-bg': '#6b3a4a',
+      '--sidebar-text': '#fdeef2',
+      '--sidebar-accent': '#d4849a',
+      '--sidebar-active-bg': 'rgba(212,132,154,0.22)',
+      '--sidebar-hover-bg': 'rgba(212,132,154,0.1)',
+      '--sidebar-border': 'rgba(212,132,154,0.2)',
+      '--primary': '#6b3a4a',
+      '--primary-hover': '#7d4a5a',
+      '--accent': '#d4849a',
+      '--accent-hover': '#c07088',
+      '--accent-text': '#3d1a24',
+      '--bg': '#fdf0f3',
+      '--surface': '#fff5f7',
+      '--border': '#e8c8d0',
+      '--text': '#3d1a24',
+      '--text-muted': '#8a5a68',
+      '--table-head-bg': '#f5e0e8',
+      '--badge-active-bg': '#fce4ec',
+      '--badge-active-text': '#6b3a4a',
+      '--nav-label': 'rgba(253,238,242,0.35)',
+      '--nav-text': 'rgba(253,238,242,0.65)',
+    }
+  },
+  {
+    id: 'ocean-teal',
+    label: 'Ocean Teal',
+    preview: ['#1a4a4a', '#3dbdbd', '#f0fafa'],
+    vars: {
+      '--sidebar-bg': '#1a4a4a',
+      '--sidebar-text': '#e8fafa',
+      '--sidebar-accent': '#3dbdbd',
+      '--sidebar-active-bg': 'rgba(61,189,189,0.22)',
+      '--sidebar-hover-bg': 'rgba(61,189,189,0.1)',
+      '--sidebar-border': 'rgba(61,189,189,0.2)',
+      '--primary': '#1a4a4a',
+      '--primary-hover': '#245a5a',
+      '--accent': '#3dbdbd',
+      '--accent-hover': '#2ea8a8',
+      '--accent-text': '#0f2d2d',
+      '--bg': '#f0fafa',
+      '--surface': '#f7fdfd',
+      '--border': '#c0dede',
+      '--text': '#0f2d2d',
+      '--text-muted': '#4a7a7a',
+      '--table-head-bg': '#e0f5f5',
+      '--badge-active-bg': '#ccf2f2',
+      '--badge-active-text': '#1a4a4a',
+      '--nav-label': 'rgba(232,250,250,0.35)',
+      '--nav-text': 'rgba(232,250,250,0.65)',
+    }
+  },
+];
+
+const DEFAULT_THEME_ID = 'warm-beige';
+
+function applyTheme(themeId) {
+  const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+  const root = document.documentElement;
+  Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v));
+}
 
 // ─── INITIAL DATA ─────────────────────────────────────────────────────────────
 const INITIAL_CLINICS = [
@@ -295,18 +476,18 @@ const styles = `
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
   
-  body { font-family: 'DM Sans', sans-serif; background: #f2ebe0; color: #2c1a0e; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
   
   .app { display: flex; height: 100vh; overflow: hidden; }
   
   .sidebar {
-    width: 240px; background: #2c1505; color: #f5ede0;
+    width: 240px; background: var(--sidebar-bg); color: var(--sidebar-text);
     display: flex; flex-direction: column;
     flex-shrink: 0;
   }
   
   .sidebar-logo {
-    padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 24px 20px; border-bottom: 1px solid var(--sidebar-border);
   }
   
   .sidebar-logo h1 {
@@ -315,7 +496,7 @@ const styles = `
   }
   
   .sidebar-logo span {
-    font-size: 11px; color: #c9a96e; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 11px; color: var(--sidebar-accent); letter-spacing: 2px; text-transform: uppercase;
     font-family: 'DM Sans', sans-serif; font-weight: 600;
   }
   
@@ -323,35 +504,35 @@ const styles = `
   
   .nav-section-label {
     font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-    color: rgba(245,237,224,0.35); padding: 16px 8px 6px;
+    color: var(--nav-label); padding: 16px 8px 6px;
   }
   
   .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px; border-radius: 8px; cursor: pointer;
-    color: rgba(245,237,224,0.65); font-size: 14px; font-weight: 500;
+    color: var(--nav-text); font-size: 14px; font-weight: 500;
     transition: all 0.15s; margin-bottom: 2px;
   }
   
-  .nav-item:hover { background: rgba(201,169,110,0.12); color: #f5ede0; }
-  .nav-item.active { background: rgba(201,169,110,0.22); color: #c9a96e; }
+  .nav-item:hover { background: rgba(196,168,130,0.15); color: #fdf5e8; }
+  .nav-item.active { background: var(--sidebar-active-bg); color: var(--sidebar-accent); }
   .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
   
   .sidebar-footer {
-    padding: 16px; border-top: 1px solid rgba(201,169,110,0.15);
-    font-size: 13px; color: rgba(245,237,224,0.45);
+    padding: 16px; border-top: 1px solid var(--sidebar-border);
+    font-size: 13px; color: var(--nav-label);
   }
   
   .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
   
   .topbar {
-    background: #fdf8f2; border-bottom: 1px solid #e0d4c0;
+    background: var(--surface); border-bottom: 1px solid var(--border);
     padding: 0 32px; height: 64px; display: flex; align-items: center;
     justify-content: space-between; flex-shrink: 0;
     position: sticky; top: 0; z-index: 10;
   }
   
-  .topbar-title { font-size: 18px; font-weight: 700; color: #3b1f0e; }
+  .topbar-title { font-size: 18px; font-weight: 700; color: #8a7258; }
   .topbar-sub { font-size: 13px; color: #64748b; margin-top: 1px; }
   
   .topbar-actions { display: flex; align-items: center; gap: 12px; }
@@ -359,29 +540,29 @@ const styles = `
   .content { padding: 28px 32px; flex: 1; }
   
   .card {
-    background: #fdf8f2; border-radius: 12px; border: 1px solid #e0d4c0;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--border);
     overflow: hidden;
   }
   
   .card-header {
-    padding: 18px 20px; border-bottom: 1px solid #e0d4c0;
+    padding: 18px 20px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
   }
   
-  .card-title { font-size: 15px; font-weight: 700; color: #3b1f0e; }
+  .card-title { font-size: 15px; font-weight: 700; color: #8a7258; }
   .card-body { padding: 20px; }
   
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
   
   .stat-card {
-    background: #fdf8f2; border-radius: 12px; padding: 20px;
-    border: 1px solid #e0d4c0;
+    background: var(--surface); border-radius: 12px; padding: 20px;
+    border: 1px solid var(--border);
   }
   
-  .stat-label { font-size: 12px; color: #7a6247; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-label { font-size: 12px; color: #8a7055; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
   .stat-value { font-size: 28px; font-weight: 700; color: #3b1f0e; margin: 6px 0 2px; font-family: 'DM Serif Display', serif; }
   .stat-sub { font-size: 12px; color: #64748b; }
-  .stat-accent { color: #c9a96e; }
+  .stat-accent { color: #c4a882; }
   
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
@@ -392,10 +573,10 @@ const styles = `
   
   .btn svg { width: 15px; height: 15px; }
   
-  .btn-primary { background: #3b1f0e; color: #f5ede0; }
-  .btn-primary:hover { background: #4f2a12; }
-  .btn-accent { background: #c9a96e; color: #2c1a0e; }
-  .btn-accent:hover { background: #b8935a; }
+  .btn-primary { background: #3b1f0e; color: #fdf5e8; }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-accent { background: var(--accent); color: var(--accent-text); }
+  .btn-accent:hover { background: var(--accent-hover); }
   .btn-ghost { background: transparent; color: #64748b; border: 1px solid #e2e8f0; }
   .btn-ghost:hover { background: #f8fafc; color: #1e293b; }
   .btn-danger { background: #fee2e2; color: #ef4444; }
@@ -404,10 +585,10 @@ const styles = `
   .btn-sm { padding: 6px 10px; font-size: 12px; }
   
   table { width: 100%; border-collapse: collapse; }
-  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #7a6247; font-weight: 600; padding: 12px 16px; text-align: left; background: #f0e8d8; border-bottom: 1px solid #e0d4c0; }
-  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #ede4d4; color: #3d2410; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #8a7055; font-weight: 600; padding: 12px 16px; text-align: left; background: #f0e8d8; border-bottom: 1px solid #e0d4c0; }
+  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #d4ead9; color: #8a7258; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #f5ede0; }
+  tr:hover td { background: var(--bg); }
   
   .badge {
     display: inline-flex; align-items: center; padding: 3px 10px;
@@ -416,7 +597,7 @@ const styles = `
   
   .badge-paid { background: #dcfce7; color: #15803d; }
   .badge-unpaid { background: #fef3c7; color: #92400e; }
-  .badge-active { background: #e8dcc8; color: #3b1f0e; }
+  .badge-active { background: #e8dcc8; color: #8a7258; }
   .badge-inactive { background: #f1f5f9; color: #64748b; }
   
   .form-group { margin-bottom: 16px; }
@@ -507,7 +688,7 @@ const styles = `
   
   .pagination { display: flex; gap: 4px; align-items: center; margin-top: 16px; justify-content: flex-end; }
   .page-btn { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; font-weight: 500; color: #64748b; }
-  .page-btn.active { background: #3b1f0e; color: #f5ede0; border-color: #3b1f0e; }
+  .page-btn.active { background: #3b1f0e; color: #fdf5e8; border-color: #8a7258; }
   .page-btn:hover:not(.active) { background: #f8fafc; }
   
   .rates-table { width: 100%; }
@@ -1023,7 +1204,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
     <div>
       <div className="filter-row">
         <div style={{ position: "relative", flex: 1 }}>
-          <Icon name="search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#7a6247" }} />
+          <Icon name="search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#8a7055" }} />
           <input className="form-input" style={{ paddingLeft: 32 }} placeholder="Search by client or clinic…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
         </div>
         <select className="form-select" style={{ width: 200 }} value={filterClinic} onChange={e => { setFilterClinic(e.target.value); setPage(1); }}>
@@ -1066,8 +1247,8 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
                   <td>{s.startTime}</td>
                   <td><span className="badge badge-active">{s.duration} min</span></td>
                   <td style={{ fontSize: 12 }}>{s.sessionType}</td>
-                  <td style={{ fontSize: 12, color: "#7a6247", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {hasPhi(s) ? <span style={{ color: "#c9a96e" }}>⚠ PHI</span> : s.notes || "—"}
+                  <td style={{ fontSize: 12, color: "#8a7055", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {hasPhi(s) ? <span style={{ color: "#c4a882" }}>⚠ PHI</span> : s.notes || "—"}
                   </td>
                   <td>
                     <div className="actions-cell">
@@ -1519,7 +1700,7 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics, company }) => {
               <label className="form-label">Message</label>
               <textarea className="form-textarea" rows={7} value={emailMessage} onChange={e => setEmailMessage(e.target.value)} />
             </div>
-            <div style={{ background: "#f0e8d8", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#7a6247", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ background: "#f5ede0", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#8a7055", display: "flex", alignItems: "center", gap: 8 }}>
               <span>📎</span>
               <span>Invoice <strong>{emailModal.invoiceNumber}</strong> will be attached as a PDF to this email.</span>
             </div>
@@ -1873,7 +2054,7 @@ const INITIAL_COMPANY = {
 };
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
-const Settings = ({ smtp, setSmtp, company, setCompany }) => {
+const Settings = ({ smtp, setSmtp, company, setCompany, themeId, setThemeId }) => {
   const [activeTab, setActiveTab] = useState("smtp");
   const [showPassword, setShowPassword] = useState(false);
   const [testStatus, setTestStatus] = useState(null); // null | "testing" | "success" | "error"
@@ -1918,6 +2099,7 @@ const Settings = ({ smtp, setSmtp, company, setCompany }) => {
       <div className="tabs">
         <button className={`tab${activeTab === "smtp" ? " active" : ""}`} onClick={() => setActiveTab("smtp")}>Email / SMTP</button>
         <button className={`tab${activeTab === "company" ? " active" : ""}`} onClick={() => setActiveTab("company")}>Company Info</button>
+        <button className={`tab${activeTab === "theme" ? " active" : ""}`} onClick={() => setActiveTab("theme")}>🎨 Theme</button>
       </div>
 
       {activeTab === "smtp" && (
@@ -1939,21 +2121,18 @@ const Settings = ({ smtp, setSmtp, company, setCompany }) => {
                   </button>
                 ))}
               </div>
-              {smtp.provider === "gmail" && (
-                <div style={{ background: "#f0e8d8", border: "1px solid #e0d4c0", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#3d2410", marginBottom: 8 }}>
-                  <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Gmail Setup — Required Steps</div>
-                  <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
-                    <li>Go to your Google Account → <strong>Security</strong></li>
-                    <li>Enable <strong>2-Step Verification</strong> (required)</li>
-                    <li>Search for <strong>"App passwords"</strong> in Google settings</li>
-                    <li>Create a new App Password — select <em>Mail</em> and <em>Other (Custom name)</em> → type "Kinevie"</li>
-                    <li>Copy the <strong>16-character password</strong> Google gives you</li>
-                    <li>Enter your Gmail address as <strong>Username</strong> below</li>
-                    <li>Paste the 16-character code as the <strong>Password</strong> (NOT your regular Gmail password)</li>
-                  </ol>
-                  <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: "#c9a96e", fontWeight: 600 }}>→ Open Google App Passwords page</a>
-                </div>
-              )}
+              <div style={{ background: "#f5ede0", border: "1px solid #ddd0b8", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#8a7258", marginBottom: 8 }}>
+                <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Email Setup — Using Resend (Free, 3000 emails/month)</div>
+                <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
+                  <li>Go to <a href="https://resend.com" target="_blank" rel="noreferrer" style={{ color: "#c4a882" }}>resend.com</a> and create a free account</li>
+                  <li>Click <strong>API Keys</strong> in the left menu → <strong>Create API Key</strong></li>
+                  <li>Name it "Kinevie", click <strong>Add</strong> — copy the key starting with <code>re_...</code></li>
+                  <li>Paste that key into the <strong>Password / API Key</strong> field below</li>
+                  <li>Set <strong>From Email</strong> to <code>onboarding@resend.dev</code> (free tier) or your verified domain</li>
+                  <li>Click <strong>Save</strong> then <strong>Test Connection</strong></li>
+                </ol>
+                <div style={{ marginTop: 6, color: "#8a7055" }}>💡 Resend works over HTTPS so it is never blocked by Railway.</div>
+              </div>
               {smtp.provider === "sendgrid" && (
                 <div className="alert alert-info" style={{ fontSize: 12 }}>
                   <strong>SendGrid:</strong> Use <code>apikey</code> as the username and your SendGrid API key as the password.
@@ -2049,6 +2228,63 @@ const Settings = ({ smtp, setSmtp, company, setCompany }) => {
         </div>
       )}
 
+
+      {activeTab === "theme" && (
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">App Theme</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Changes apply instantly</span>
+          </div>
+          <div className="card-body">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              {THEMES.map(t => (
+                <div
+                  key={t.id}
+                  onClick={() => setThemeId(t.id)}
+                  style={{
+                    border: `2px solid ${themeId === t.id ? 'var(--accent)' : 'var(--border)'}`,
+                    borderRadius: 12, overflow: 'hidden', cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    boxShadow: themeId === t.id ? '0 0 0 3px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >
+                  {/* Mini app preview */}
+                  <div style={{ display: 'flex', height: 80 }}>
+                    <div style={{ width: 28, background: t.vars['--sidebar-bg'], display: 'flex', flexDirection: 'column', padding: '6px 4px', gap: 4 }}>
+                      {[1,2,3,4].map(i => (
+                        <div key={i} style={{ height: 4, borderRadius: 2, background: i === 2 ? t.vars['--sidebar-accent'] : 'rgba(255,255,255,0.25)' }} />
+                      ))}
+                    </div>
+                    <div style={{ flex: 1, background: t.vars['--bg'], padding: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ height: 8, width: '60%', borderRadius: 3, background: t.vars['--primary'], opacity: 0.7 }} />
+                      <div style={{ display: 'flex', gap: 3, flex: 1 }}>
+                        {[1,2,3].map(i => (
+                          <div key={i} style={{ flex: 1, background: t.vars['--surface'], borderRadius: 4, border: `1px solid ${t.vars['--border']}` }} />
+                        ))}
+                      </div>
+                      <div style={{ height: 14, borderRadius: 4, background: t.vars['--surface'], border: `1px solid ${t.vars['--border']}` }} />
+                    </div>
+                  </div>
+                  {/* Label row */}
+                  <div style={{
+                    padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'var(--surface)', borderTop: '1px solid var(--border)',
+                  }}>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      {t.preview.map((c, i) => (
+                        <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: c, border: '1px solid rgba(0,0,0,0.1)' }} />
+                      ))}
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{t.label}</span>
+                    {themeId === t.id && <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 700 }}>✓ Active</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === "company" && (
         <div className="card">
           <div className="card-header"><span className="card-title">Company Information</span></div>
@@ -2134,6 +2370,9 @@ function MainApp() {
   const [expenses, setExpensesRaw] = useState([]);
   const [smtp, setSmtpRaw] = useState(INITIAL_SMTP);
   const [company, setCompanyRaw] = useState(INITIAL_COMPANY);
+  const [themeId, setThemeId] = useState(() => localStorage.getItem('kinevie-theme') || DEFAULT_THEME_ID);
+
+  useEffect(() => { applyTheme(themeId); localStorage.setItem('kinevie-theme', themeId); }, [themeId]);
   const [dataLoaded, setDataLoaded] = useState(false);
 
   // Load all data on mount
@@ -2287,17 +2526,17 @@ function MainApp() {
             ))}
           </nav>
           <div className="sidebar-footer">
-            <div style={{ fontWeight: 600, color: 'rgba(245,237,224,0.9)', fontSize: 13, marginBottom: 2 }}>{user?.fullName}</div>
-            {user?.rmtNumber && <div style={{ fontSize: 11, color: 'rgba(201,169,110,0.7)', marginBottom: 8 }}>RMT #{user.rmtNumber}</div>}
+            <div style={{ fontWeight: 600, color: 'rgba(253,245,232,0.9)', fontSize: 13, marginBottom: 2 }}>{user?.fullName}</div>
+            {user?.rmtNumber && <div style={{ fontSize: 11, color: 'rgba(196,168,130,0.7)', marginBottom: 8 }}>RMT #{user.rmtNumber}</div>}
             <button
               onClick={logout}
-              style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)', color: 'rgba(245,237,224,0.7)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 12 }}
+              style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(196,168,130,0.25)', color: 'rgba(253,245,232,0.7)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 12 }}
             >
               Sign Out
             </button>
-            <div style={{ fontSize: 10, color: 'rgba(201,169,110,0.4)', textAlign: 'center', letterSpacing: '0.5px', borderTop: '1px solid rgba(201,169,110,0.1)', paddingTop: 10 }}>
+            <div style={{ fontSize: 10, color: 'rgba(196,168,130,0.5)', textAlign: 'center', letterSpacing: '0.5px', borderTop: '1px solid rgba(196,168,130,0.15)', paddingTop: 10 }}>
               Developed by<br/>
-              <span style={{ fontWeight: 600, color: 'rgba(201,169,110,0.6)' }}>Crossbolt Technologies Inc.</span>
+              <span style={{ fontWeight: 600, color: 'rgba(196,168,130,0.8)' }}>Crossbolt Technologies Inc.</span>
             </div>
           </div>
         </aside>
@@ -2326,7 +2565,7 @@ function MainApp() {
             {page === 'invoices'   && <Invoices invoices={invoices} setInvoices={setInvoices} sessions={sessions} clinics={clinics} company={company} />}
             {page === 'expenses'   && <Expenses expenses={expenses} setExpenses={setExpenses} />}
             {page === 'import'     && <CSVImport sessions={sessions} setSessions={setSessions} clinics={clinics} setClinics={setClinics} />}
-            {page === 'settings'   && <Settings smtp={smtp} setSmtp={setSmtp} company={company} setCompany={setCompany} />}
+            {page === 'settings'   && <Settings smtp={smtp} setSmtp={setSmtp} company={company} setCompany={setCompany} themeId={themeId} setThemeId={setThemeId} />}
           </div>
         </div>
       </div>
