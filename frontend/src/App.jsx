@@ -9,17 +9,17 @@ import AuthPage from './pages/AuthPage';
 // Color palette: Deep slate + warm amber accents + clean whites
 
 const COLORS = {
-  primary: "#1a3a2a",
-  accent: "#4caf7d",
-  accentLight: "#e8f5ee",
+  primary: "#3b1f0e",
+  accent: "#c9a96e",
+  accentLight: "#f5ede0",
   success: "#22c55e",
   danger: "#ef4444",
   warning: "#f59e0b",
-  bg: "#f0f7f2",
-  surface: "#f7fbf8",
-  border: "#c8dfd1",
-  text: "#0f2d1e",
-  textMuted: "#4a7a5e",
+  bg: "#f2ebe0",
+  surface: "#fdf8f2",
+  border: "#e0d4c0",
+  text: "#2c1a0e",
+  textMuted: "#7a6247",
 };
 
 // ─── INITIAL DATA ─────────────────────────────────────────────────────────────
@@ -295,12 +295,12 @@ const styles = `
   
   * { box-sizing: border-box; margin: 0; padding: 0; }
   
-  body { font-family: 'DM Sans', sans-serif; background: #f0f7f2; color: #0f2d1e; }
+  body { font-family: 'DM Sans', sans-serif; background: #f2ebe0; color: #2c1a0e; }
   
   .app { display: flex; height: 100vh; overflow: hidden; }
   
   .sidebar {
-    width: 240px; background: #0d2618; color: #e8f5ee;
+    width: 240px; background: #2c1505; color: #f5ede0;
     display: flex; flex-direction: column;
     flex-shrink: 0;
   }
@@ -315,7 +315,7 @@ const styles = `
   }
   
   .sidebar-logo span {
-    font-size: 11px; color: #4caf7d; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 11px; color: #c9a96e; letter-spacing: 2px; text-transform: uppercase;
     font-family: 'DM Sans', sans-serif; font-weight: 600;
   }
   
@@ -323,35 +323,35 @@ const styles = `
   
   .nav-section-label {
     font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-    color: rgba(232,245,238,0.35); padding: 16px 8px 6px;
+    color: rgba(245,237,224,0.35); padding: 16px 8px 6px;
   }
   
   .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px; border-radius: 8px; cursor: pointer;
-    color: rgba(232,245,238,0.65); font-size: 14px; font-weight: 500;
+    color: rgba(245,237,224,0.65); font-size: 14px; font-weight: 500;
     transition: all 0.15s; margin-bottom: 2px;
   }
   
-  .nav-item:hover { background: rgba(76,175,125,0.12); color: #e8f5ee; }
-  .nav-item.active { background: rgba(76,175,125,0.22); color: #4caf7d; }
+  .nav-item:hover { background: rgba(201,169,110,0.12); color: #f5ede0; }
+  .nav-item.active { background: rgba(201,169,110,0.22); color: #c9a96e; }
   .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
   
   .sidebar-footer {
-    padding: 16px; border-top: 1px solid rgba(76,175,125,0.15);
-    font-size: 13px; color: rgba(232,245,238,0.45);
+    padding: 16px; border-top: 1px solid rgba(201,169,110,0.15);
+    font-size: 13px; color: rgba(245,237,224,0.45);
   }
   
   .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
   
   .topbar {
-    background: #f7fbf8; border-bottom: 1px solid #c8dfd1;
+    background: #fdf8f2; border-bottom: 1px solid #e0d4c0;
     padding: 0 32px; height: 64px; display: flex; align-items: center;
     justify-content: space-between; flex-shrink: 0;
     position: sticky; top: 0; z-index: 10;
   }
   
-  .topbar-title { font-size: 18px; font-weight: 700; color: #1a3a2a; }
+  .topbar-title { font-size: 18px; font-weight: 700; color: #3b1f0e; }
   .topbar-sub { font-size: 13px; color: #64748b; margin-top: 1px; }
   
   .topbar-actions { display: flex; align-items: center; gap: 12px; }
@@ -359,29 +359,29 @@ const styles = `
   .content { padding: 28px 32px; flex: 1; }
   
   .card {
-    background: #f7fbf8; border-radius: 12px; border: 1px solid #c8dfd1;
+    background: #fdf8f2; border-radius: 12px; border: 1px solid #e0d4c0;
     overflow: hidden;
   }
   
   .card-header {
-    padding: 18px 20px; border-bottom: 1px solid #c8dfd1;
+    padding: 18px 20px; border-bottom: 1px solid #e0d4c0;
     display: flex; align-items: center; justify-content: space-between;
   }
   
-  .card-title { font-size: 15px; font-weight: 700; color: #1a3a2a; }
+  .card-title { font-size: 15px; font-weight: 700; color: #3b1f0e; }
   .card-body { padding: 20px; }
   
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
   
   .stat-card {
-    background: #f7fbf8; border-radius: 12px; padding: 20px;
-    border: 1px solid #c8dfd1;
+    background: #fdf8f2; border-radius: 12px; padding: 20px;
+    border: 1px solid #e0d4c0;
   }
   
-  .stat-label { font-size: 12px; color: #4a7a5e; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-label { font-size: 12px; color: #7a6247; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
   .stat-value { font-size: 28px; font-weight: 700; color: #3b1f0e; margin: 6px 0 2px; font-family: 'DM Serif Display', serif; }
   .stat-sub { font-size: 12px; color: #64748b; }
-  .stat-accent { color: #4caf7d; }
+  .stat-accent { color: #c9a96e; }
   
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
@@ -392,10 +392,10 @@ const styles = `
   
   .btn svg { width: 15px; height: 15px; }
   
-  .btn-primary { background: #3b1f0e; color: #e8f5ee; }
-  .btn-primary:hover { background: #245038; }
-  .btn-accent { background: #4caf7d; color: #0f2d1e; }
-  .btn-accent:hover { background: #3d9e6a; }
+  .btn-primary { background: #3b1f0e; color: #f5ede0; }
+  .btn-primary:hover { background: #4f2a12; }
+  .btn-accent { background: #c9a96e; color: #2c1a0e; }
+  .btn-accent:hover { background: #b8935a; }
   .btn-ghost { background: transparent; color: #64748b; border: 1px solid #e2e8f0; }
   .btn-ghost:hover { background: #f8fafc; color: #1e293b; }
   .btn-danger { background: #fee2e2; color: #ef4444; }
@@ -404,10 +404,10 @@ const styles = `
   .btn-sm { padding: 6px 10px; font-size: 12px; }
   
   table { width: 100%; border-collapse: collapse; }
-  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #4a7a5e; font-weight: 600; padding: 12px 16px; text-align: left; background: #f0e8d8; border-bottom: 1px solid #e0d4c0; }
-  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #d4ead9; color: #1a3a2a; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #7a6247; font-weight: 600; padding: 12px 16px; text-align: left; background: #f0e8d8; border-bottom: 1px solid #e0d4c0; }
+  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #ede4d4; color: #3d2410; }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #e8f5ee; }
+  tr:hover td { background: #f5ede0; }
   
   .badge {
     display: inline-flex; align-items: center; padding: 3px 10px;
@@ -416,7 +416,7 @@ const styles = `
   
   .badge-paid { background: #dcfce7; color: #15803d; }
   .badge-unpaid { background: #fef3c7; color: #92400e; }
-  .badge-active { background: #e8dcc8; color: #1a3a2a; }
+  .badge-active { background: #e8dcc8; color: #3b1f0e; }
   .badge-inactive { background: #f1f5f9; color: #64748b; }
   
   .form-group { margin-bottom: 16px; }
@@ -507,7 +507,7 @@ const styles = `
   
   .pagination { display: flex; gap: 4px; align-items: center; margin-top: 16px; justify-content: flex-end; }
   .page-btn { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; font-weight: 500; color: #64748b; }
-  .page-btn.active { background: #3b1f0e; color: #e8f5ee; border-color: #1a3a2a; }
+  .page-btn.active { background: #3b1f0e; color: #f5ede0; border-color: #3b1f0e; }
   .page-btn:hover:not(.active) { background: #f8fafc; }
   
   .rates-table { width: 100%; }
@@ -1023,7 +1023,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
     <div>
       <div className="filter-row">
         <div style={{ position: "relative", flex: 1 }}>
-          <Icon name="search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#4a7a5e" }} />
+          <Icon name="search" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: "#7a6247" }} />
           <input className="form-input" style={{ paddingLeft: 32 }} placeholder="Search by client or clinic…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
         </div>
         <select className="form-select" style={{ width: 200 }} value={filterClinic} onChange={e => { setFilterClinic(e.target.value); setPage(1); }}>
@@ -1066,8 +1066,8 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
                   <td>{s.startTime}</td>
                   <td><span className="badge badge-active">{s.duration} min</span></td>
                   <td style={{ fontSize: 12 }}>{s.sessionType}</td>
-                  <td style={{ fontSize: 12, color: "#4a7a5e", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {hasPhi(s) ? <span style={{ color: "#4caf7d" }}>⚠ PHI</span> : s.notes || "—"}
+                  <td style={{ fontSize: 12, color: "#7a6247", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {hasPhi(s) ? <span style={{ color: "#c9a96e" }}>⚠ PHI</span> : s.notes || "—"}
                   </td>
                   <td>
                     <div className="actions-cell">
@@ -1519,7 +1519,7 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics, company }) => {
               <label className="form-label">Message</label>
               <textarea className="form-textarea" rows={7} value={emailMessage} onChange={e => setEmailMessage(e.target.value)} />
             </div>
-            <div style={{ background: "#e8f5ee", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#4a7a5e", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ background: "#f0e8d8", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#7a6247", display: "flex", alignItems: "center", gap: 8 }}>
               <span>📎</span>
               <span>Invoice <strong>{emailModal.invoiceNumber}</strong> will be attached as a PDF to this email.</span>
             </div>
@@ -1939,18 +1939,21 @@ const Settings = ({ smtp, setSmtp, company, setCompany }) => {
                   </button>
                 ))}
               </div>
-              <div style={{ background: "#e8f5ee", border: "1px solid #c8dfd1", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#1a3a2a", marginBottom: 8 }}>
-                <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Email Setup — Using Resend (Free, 3000 emails/month)</div>
-                <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
-                  <li>Go to <a href="https://resend.com" target="_blank" rel="noreferrer" style={{ color: "#4caf7d" }}>resend.com</a> and create a free account</li>
-                  <li>Click <strong>API Keys</strong> in the left menu → <strong>Create API Key</strong></li>
-                  <li>Name it "Kinevie", click <strong>Add</strong> — copy the key starting with <code>re_...</code></li>
-                  <li>Paste that key into the <strong>Password / API Key</strong> field below</li>
-                  <li>Set <strong>From Email</strong> to <code>onboarding@resend.dev</code> (free tier) or your verified domain</li>
-                  <li>Click <strong>Save</strong> then <strong>Test Connection</strong></li>
-                </ol>
-                <div style={{ marginTop: 6, color: "#4a7a5e" }}>💡 Resend works over HTTPS so it is never blocked by Railway.</div>
-              </div>
+              {smtp.provider === "gmail" && (
+                <div style={{ background: "#f0e8d8", border: "1px solid #e0d4c0", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#3d2410", marginBottom: 8 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Gmail Setup — Required Steps</div>
+                  <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
+                    <li>Go to your Google Account → <strong>Security</strong></li>
+                    <li>Enable <strong>2-Step Verification</strong> (required)</li>
+                    <li>Search for <strong>"App passwords"</strong> in Google settings</li>
+                    <li>Create a new App Password — select <em>Mail</em> and <em>Other (Custom name)</em> → type "Kinevie"</li>
+                    <li>Copy the <strong>16-character password</strong> Google gives you</li>
+                    <li>Enter your Gmail address as <strong>Username</strong> below</li>
+                    <li>Paste the 16-character code as the <strong>Password</strong> (NOT your regular Gmail password)</li>
+                  </ol>
+                  <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: "#c9a96e", fontWeight: 600 }}>→ Open Google App Passwords page</a>
+                </div>
+              )}
               {smtp.provider === "sendgrid" && (
                 <div className="alert alert-info" style={{ fontSize: 12 }}>
                   <strong>SendGrid:</strong> Use <code>apikey</code> as the username and your SendGrid API key as the password.
@@ -2284,17 +2287,17 @@ function MainApp() {
             ))}
           </nav>
           <div className="sidebar-footer">
-            <div style={{ fontWeight: 600, color: 'rgba(232,245,238,0.9)', fontSize: 13, marginBottom: 2 }}>{user?.fullName}</div>
-            {user?.rmtNumber && <div style={{ fontSize: 11, color: 'rgba(76,175,125,0.7)', marginBottom: 8 }}>RMT #{user.rmtNumber}</div>}
+            <div style={{ fontWeight: 600, color: 'rgba(245,237,224,0.9)', fontSize: 13, marginBottom: 2 }}>{user?.fullName}</div>
+            {user?.rmtNumber && <div style={{ fontSize: 11, color: 'rgba(201,169,110,0.7)', marginBottom: 8 }}>RMT #{user.rmtNumber}</div>}
             <button
               onClick={logout}
-              style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(76,175,125,0.2)', color: 'rgba(232,245,238,0.7)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 12 }}
+              style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)', color: 'rgba(245,237,224,0.7)', borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginBottom: 12 }}
             >
               Sign Out
             </button>
-            <div style={{ fontSize: 10, color: 'rgba(76,175,125,0.4)', textAlign: 'center', letterSpacing: '0.5px', borderTop: '1px solid rgba(76,175,125,0.1)', paddingTop: 10 }}>
+            <div style={{ fontSize: 10, color: 'rgba(201,169,110,0.4)', textAlign: 'center', letterSpacing: '0.5px', borderTop: '1px solid rgba(201,169,110,0.1)', paddingTop: 10 }}>
               Developed by<br/>
-              <span style={{ fontWeight: 600, color: 'rgba(76,175,125,0.6)' }}>Crossbolt Technologies Inc.</span>
+              <span style={{ fontWeight: 600, color: 'rgba(201,169,110,0.6)' }}>Crossbolt Technologies Inc.</span>
             </div>
           </div>
         </aside>
