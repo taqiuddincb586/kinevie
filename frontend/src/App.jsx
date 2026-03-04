@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { api, emailApi } from './api/client';
 import AuthPage from './pages/AuthPage';
@@ -1148,6 +1148,13 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
   const [filterClinic, setFilterClinic] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(new Set());
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const PER_PAGE = 10;
 
   const activeClinics = clinics.filter(c => c.status === "active");
@@ -1165,8 +1172,114 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
 
   const openAdd = () => {
     setEditing(null);
+    setVoiceMode(false);
+    setVoiceTranscript("");
+    setVoiceError("");
     setForm({ clinicId: activeClinics[0]?.id || "", date: new Date().toISOString().split("T")[0], startTime: "", duration: "", sessionType: "RMT", clientInitial: "", notes: "" });
     setModal(true);
+  };
+
+  const openVoiceAdd = () => {
+    setEditing(null);
+    setVoiceMode(true);
+    setVoiceTranscript("");
+    setVoiceError("");
+    setForm({ clinicId: activeClinics[0]?.id || "", date: new Date().toISOString().split("T")[0], startTime: "", duration: "", sessionType: "RMT", clientInitial: "", notes: "" });
+    setModal(true);
+  };
+
+  const startRecording = async () => {
+    setVoiceError("");
+    setVoiceTranscript("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg" });
+      audioChunksRef.current = [];
+      mr.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: mr.mimeType });
+        await processVoice(blob);
+      };
+      mediaRecorderRef.current = mr;
+      mr.start();
+      setRecording(true);
+    } catch (e) {
+      setVoiceError("Microphone access denied. Please allow microphone access and try again.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+      setVoiceProcessing(true);
+    }
+  };
+
+  const processVoice = async (audioBlob) => {
+    try {
+      // Use Web Speech API for transcription (browser-native, free)
+      const text = await transcribeAudio(audioBlob);
+      setVoiceTranscript(text);
+      // Use Claude AI to extract session details from transcript
+      await extractSessionFromText(text);
+    } catch (e) {
+      setVoiceError("Could not process voice. Please try again or fill in manually.");
+    } finally {
+      setVoiceProcessing(false);
+    }
+  };
+
+  const transcribeAudio = (audioBlob) => {
+    return new Promise((resolve, reject) => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) { reject(new Error("Not supported")); return; }
+      // Re-play via audio element for recognition
+      const url = URL.createObjectURL(audioBlob);
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+      let result = "";
+      recognition.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) result += e.results[i][0].transcript + " "; };
+      recognition.onerror = () => reject(new Error("Recognition failed"));
+      recognition.onend = () => resolve(result.trim() || "Could not transcribe audio. Please speak clearly and try again.");
+      recognition.start();
+      // Stop after short delay if no speech detected
+      setTimeout(() => { try { recognition.stop(); } catch(e){} }, 10000);
+    });
+  };
+
+  const extractSessionFromText = async (text) => {
+    if (!text || text.includes("Could not transcribe")) return;
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 400,
+          system: "You are a medical assistant helping an RMT log session details. Extract session information from the voice note and return ONLY a JSON object with these fields: date (YYYY-MM-DD, default today), startTime (HH:MM 24h), duration (integer minutes: 30/45/60/90), sessionType (one of: RMT, RMT + Cupping, RMT + Osteo, Others), clientInitial (initials only, e.g. J.D.), notes (brief treatment notes). If a field is not mentioned, use empty string or sensible default. Return only valid JSON, no other text.",
+          messages: [{ role: "user", content: `Today is ${new Date().toISOString().split("T")[0]}. Voice note: "${text}"` }]
+        })
+      });
+      const data = await response.json();
+      const raw = data.content?.[0]?.text || "{}";
+      const clean = raw.replace(/\`\`\`json|\`\`\`/g, "").trim();
+      const parsed = JSON.parse(clean);
+      setForm(f => ({
+        ...f,
+        date: parsed.date || f.date,
+        startTime: parsed.startTime || f.startTime,
+        duration: parsed.duration ? parseInt(parsed.duration) : f.duration,
+        sessionType: parsed.sessionType || f.sessionType,
+        clientInitial: parsed.clientInitial || f.clientInitial,
+        notes: parsed.notes || f.notes,
+      }));
+    } catch(e) {
+      // AI extraction failed, transcript still shown for manual review
+    }
   };
 
   const openEdit = (s) => {
@@ -1217,6 +1330,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
           </button>
         )}
         <button className="btn btn-primary" onClick={openAdd}><Icon name="plus" />Log Session</button>
+        <button className="btn btn-accent" onClick={openVoiceAdd} title="Voice log a session">🎙 Voice Log</button>
       </div>
 
       <div className="card">
@@ -1274,9 +1388,56 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
         )}
       </div>
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editing ? "Edit Session" : "Log Session"}
+      <Modal open={modal} onClose={() => { setModal(false); setRecording(false); if(mediaRecorderRef.current && recording) try{mediaRecorderRef.current.stop()}catch(e){}; }} title={editing ? "Edit Session" : voiceMode ? "🎙 Voice Log Session" : "Log Session"}
         footer={<><button className="btn btn-ghost" onClick={() => setModal(false)}>Cancel</button><button className="btn btn-primary" onClick={save}>Save Session</button></>}
       >
+        {voiceMode && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ background: 'var(--table-head-bg)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', marginBottom: 8 }}>🎙 Voice Recording</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+                Speak naturally: <em>"Today I treated J.D. at FlexCare for a 60 minute RMT session starting at 2pm. Deep tissue work on upper back."</em>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
+                {!recording && !voiceProcessing && (
+                  <button className="btn btn-accent" onClick={startRecording} style={{ gap: 8 }}>
+                    🎙 Start Recording
+                  </button>
+                )}
+                {recording && (
+                  <button className="btn btn-danger" onClick={stopRecording} style={{ animation: 'pulse 1s infinite' }}>
+                    ⏹ Stop Recording
+                  </button>
+                )}
+                {voiceProcessing && (
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span> Processing voice with AI…
+                  </div>
+                )}
+                {recording && (
+                  <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} style={{ width: 4, background: '#ef4444', borderRadius: 2, animation: `voiceBar${i} 0.5s ease infinite alternate`, height: `${8 + i*4}px` }} />
+                    ))}
+                    <span style={{ fontSize: 12, color: '#ef4444', marginLeft: 6, fontWeight: 600 }}>Recording…</span>
+                  </div>
+                )}
+              </div>
+              {voiceTranscript && (
+                <div style={{ background: 'var(--surface)', borderRadius: 8, padding: '10px 12px', border: '1px solid var(--border)', marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>Transcript</div>
+                  <div style={{ fontSize: 13, color: 'var(--text)', fontStyle: 'italic' }}>{voiceTranscript}</div>
+                </div>
+              )}
+              {voiceTranscript && !voiceProcessing && (
+                <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>✓ Fields filled below — review and adjust before saving</div>
+              )}
+              {voiceError && (
+                <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4 }}>⚠ {voiceError}</div>
+              )}
+            </div>
+          </div>
+        )}
         <div className="form-grid">
           <div className="form-group">
             <label className="form-label">Clinic *</label>
@@ -2350,7 +2511,7 @@ const NAV = [
 ];
 
 const PAGE_TITLES = {
-  dashboard: ["Dashboard", "Welcome back, RMT"],
+  dashboard: ["Dashboard", ""],  // subtitle set dynamically
   clinics: ["Manage Clinics", "Configure clinic rates & billing"],
   sessions: ["Session Logs", "Track your daily sessions"],
   invoices: ["Invoices", "Generate & manage invoices"],
@@ -2487,7 +2648,8 @@ function MainApp() {
     await api.saveSettings({ smtp, company: next }).catch(console.error);
   }, [smtp, company]);
 
-  const [title, subtitle] = PAGE_TITLES[page] || ['', ''];
+  const [title, subtitleRaw] = PAGE_TITLES[page] || ['', ''];
+  const subtitle = page === 'dashboard' ? `Welcome back, ${user?.fullName?.split(' ')[0] || 'there'} 👋` : subtitleRaw;
 
   if (!dataLoaded) {
     return (
@@ -2506,7 +2668,7 @@ function MainApp() {
       <div className="app">
         <aside className="sidebar">
           <div className="sidebar-logo">
-            <h1>Kinevie</h1>
+            <h1>Kinevie <span style={{fontSize:14, fontWeight:400, opacity:0.7}}>Lite</span></h1>
             <span>Smart Practice Manager</span>
           </div>
           <nav className="sidebar-nav">
@@ -2518,7 +2680,7 @@ function MainApp() {
               </div>
             ))}
             <div className="nav-section-label">Tools</div>
-            {NAV.filter(n => n.section === 'tools').map(n => (
+            {NAV.filter(n => n.section === 'tools' && (n.id !== 'settings' || user?.role === 'administrator')).map(n => (
               <div key={n.id} className={`nav-item${page === n.id ? ' active' : ''}`} onClick={() => setPage(n.id)}>
                 <Icon name={n.icon} />
                 {n.label}
@@ -2536,7 +2698,7 @@ function MainApp() {
             </button>
             <div style={{ fontSize: 10, color: 'rgba(196,168,130,0.5)', textAlign: 'center', letterSpacing: '0.5px', borderTop: '1px solid rgba(196,168,130,0.15)', paddingTop: 10 }}>
               Developed by<br/>
-              <span style={{ fontWeight: 600, color: 'rgba(196,168,130,0.8)' }}>Crossbolt Technologies Inc.</span>
+              <a href="https://www.crossbolt.ca/" target="_blank" rel="noreferrer" style={{ fontWeight: 600, color: 'rgba(196,168,130,0.8)', textDecoration: 'none' }}>Crossbolt Technologies Inc.</a>
             </div>
           </div>
         </aside>
@@ -2565,7 +2727,8 @@ function MainApp() {
             {page === 'invoices'   && <Invoices invoices={invoices} setInvoices={setInvoices} sessions={sessions} clinics={clinics} company={company} />}
             {page === 'expenses'   && <Expenses expenses={expenses} setExpenses={setExpenses} />}
             {page === 'import'     && <CSVImport sessions={sessions} setSessions={setSessions} clinics={clinics} setClinics={setClinics} />}
-            {page === 'settings'   && <Settings smtp={smtp} setSmtp={setSmtp} company={company} setCompany={setCompany} themeId={themeId} setThemeId={setThemeId} />}
+            {page === 'settings' && user?.role === 'administrator' && <Settings smtp={smtp} setSmtp={setSmtp} company={company} setCompany={setCompany} themeId={themeId} setThemeId={setThemeId} />}
+            {page === 'settings' && user?.role !== 'administrator' && <div style={{padding:40,textAlign:'center',color:'var(--text-muted)'}}>⛔ Admin access required.</div>}
           </div>
         </div>
       </div>
