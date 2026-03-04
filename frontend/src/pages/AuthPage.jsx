@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 const C = {
-  primary: '#1a3a2a',
-  accent: '#4caf7d',
-  accentLight: '#e8f5ee',
-  bg: '#f0f7f2',
-  surface: '#f7fbf8',
-  border: '#c8dfd1',
-  text: '#0f2d1e',
-  muted: '#4a7a5e',
+  primary: '#8a7258',
+  accent: '#c4a882',
+  accentLight: '#f5ede0',
+  bg: '#f5ede0',
+  surface: '#fdf8f2',
+  border: '#ddd0b8',
+  text: '#3d2e1a',
+  muted: '#8a7055',
   danger: '#ef4444',
   success: '#22c55e',
 };
@@ -17,7 +17,7 @@ const C = {
 const styles = `
   .auth-root {
     min-height: 100vh;
-    background: linear-gradient(135deg, #071a10 0%, #0d2e1a 50%, #1a4d2e 100%);
+    background: linear-gradient(135deg, #2e2010 0%, #7a6248 50%, #8a7258 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -29,8 +29,8 @@ const styles = `
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(76,175,125,0.1) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(26,77,46,0.4) 0%, transparent 50%);
+    background: radial-gradient(ellipse at 20% 50%, rgba(196,168,130,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(107,90,62,0.4) 0%, transparent 50%);
   }
   .auth-card {
     background: #fff;
@@ -49,7 +49,7 @@ const styles = `
   .auth-logo h1 {
     font-family: 'DM Serif Display', serif;
     font-size: 32px;
-    color: #1a3a2a;
+    color: #8a7258;
     letter-spacing: -0.5px;
   }
   .auth-logo span {
@@ -80,7 +80,7 @@ const styles = `
   }
   .auth-tab.active {
     background: #fff;
-    color: #1a3a2a;
+    color: #8a7258;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
   .auth-form-group {
@@ -115,7 +115,7 @@ const styles = `
   .auth-btn {
     width: 100%;
     padding: 13px;
-    background: linear-gradient(135deg, #4caf7d, #2d8a57);
+    background: linear-gradient(135deg, #c4a882, #a08050);
     color: #fff;
     border: none;
     border-radius: 10px;
@@ -126,7 +126,7 @@ const styles = `
     font-family: inherit;
     letter-spacing: 0.3px;
     transition: opacity 0.2s, transform 0.1s;
-    box-shadow: 0 4px 14px rgba(76,175,125,0.35);
+    box-shadow: 0 4px 14px rgba(196,168,130,0.4);
   }
   .auth-btn:hover { opacity: 0.92; transform: translateY(-1px); }
   .auth-btn:active { transform: translateY(0); }
@@ -171,7 +171,7 @@ export default function AuthPage() {
   const [localError, setLocalError] = useState('');
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [regForm, setRegForm] = useState({ email: '', password: '', confirmPassword: '', fullName: '', rmtNumber: '' });
+  const [regForm, setRegForm] = useState({ email: '', password: '', confirmPassword: '', fullName: '', rmtNumber: '', role: 'practitioner' });
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -198,6 +198,7 @@ export default function AuthPage() {
         password: regForm.password,
         fullName: regForm.fullName,
         rmtNumber: regForm.rmtNumber,
+        role: regForm.role,
       });
     } catch (err) {
       setLocalError(err.message);
@@ -212,7 +213,7 @@ export default function AuthPage() {
       <div className="auth-root">
         <div className="auth-card">
           <div className="auth-logo">
-            <h1>Kinevie</h1>
+            <h1>Kinevie <span style={{fontSize:16,fontWeight:400,opacity:0.6}}>Lite</span></h1>
             <span>Smart Practice Manager</span>
           </div>
 
@@ -271,6 +272,29 @@ export default function AuthPage() {
                   onChange={e => setRegForm(f => ({ ...f, fullName: e.target.value }))}
                   required
                 />
+              </div>
+              <div className="auth-form-group">
+                <label className="auth-label">Account Type</label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {[
+                    { value: 'practitioner', label: '🩺 Practitioner', desc: 'Log sessions & view data' },
+                    { value: 'administrator', label: '⚙️ Administrator', desc: 'Full access & settings' },
+                  ].map(opt => (
+                    <div
+                      key={opt.value}
+                      onClick={() => setRegForm(f => ({ ...f, role: opt.value }))}
+                      style={{
+                        flex: 1, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+                        border: `2px solid ${regForm.role === opt.value ? C.accent : C.border}`,
+                        background: regForm.role === opt.value ? C.accentLight : C.surface,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>{opt.label}</div>
+                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{opt.desc}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="auth-row">
                 <div className="auth-form-group">
