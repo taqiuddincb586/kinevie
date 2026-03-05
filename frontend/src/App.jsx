@@ -79,7 +79,7 @@ const COUNTRIES = [
   { code: 'MM', name: 'Myanmar', currency: 'MMK', symbol: 'K', provinces: [] },
   { code: 'NP', name: 'Nepal', currency: 'NPR', symbol: 'Rs', provinces: [] },
   { code: 'NL', name: 'Netherlands', currency: 'EUR', symbol: '€', provinces: [] },
-  { code: 'NZ', name: 'New Zealand', currency: 'NZD', symbol: 'NZ$', provinces: ['Auckland','Bay of Plenty','Canterbury','Gisborne','Hawke's Bay','Manawatu-Whanganui','Marlborough','Nelson','Northland','Otago','Southland','Taranaki','Tasman','Waikato','Wellington','West Coast'] },
+  { code: 'NZ', name: 'New Zealand', currency: 'NZD', symbol: 'NZ$', provinces: ['Auckland','Bay of Plenty','Canterbury','Gisborne',"Hawke's Bay",'Manawatu-Whanganui','Marlborough','Nelson','Northland','Otago','Southland','Taranaki','Tasman','Waikato','Wellington','West Coast'] },
   { code: 'NG', name: 'Nigeria', currency: 'NGN', symbol: '₦', provinces: [] },
   { code: 'NO', name: 'Norway', currency: 'NOK', symbol: 'kr', provinces: [] },
   { code: 'OM', name: 'Oman', currency: 'OMR', symbol: 'OMR', provinces: [] },
