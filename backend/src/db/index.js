@@ -93,6 +93,7 @@ const SCHEMA = `
   );
 
   ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'practitioner' CHECK (role IN ('administrator', 'practitioner'));
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS practice_type TEXT;
 
 
   -- Registration approval workflow

@@ -27,11 +27,91 @@ const COLORS = {
 // ─── COUNTRIES & CURRENCIES ──────────────────────────────────────────────────
 const COUNTRIES = [
   { code: 'CA', name: 'Canada', currency: 'CAD', symbol: 'CA$', provinces: ['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon'] },
-  { code: 'US', name: 'United States', currency: 'USD', symbol: '$', provinces: ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming','District of Columbia'] },
+  { code: 'US', name: 'United States', currency: 'USD', symbol: '$', provinces: ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming','D.C.'] },
   { code: 'GB', name: 'United Kingdom', currency: 'GBP', symbol: '£', provinces: ['England','Scotland','Wales','Northern Ireland'] },
   { code: 'AU', name: 'Australia', currency: 'AUD', symbol: 'A$', provinces: ['Australian Capital Territory','New South Wales','Northern Territory','Queensland','South Australia','Tasmania','Victoria','Western Australia'] },
   { code: 'IN', name: 'India', currency: 'INR', symbol: '₹', provinces: ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi'] },
   { code: 'AE', name: 'UAE', currency: 'AED', symbol: 'AED', provinces: ['Abu Dhabi','Ajman','Dubai','Fujairah','Ras Al Khaimah','Sharjah','Umm Al Quwain'] },
+  { code: 'AF', name: 'Afghanistan', currency: 'AFN', symbol: '؋', provinces: [] },
+  { code: 'AL', name: 'Albania', currency: 'ALL', symbol: 'L', provinces: [] },
+  { code: 'DZ', name: 'Algeria', currency: 'DZD', symbol: 'DA', provinces: [] },
+  { code: 'AR', name: 'Argentina', currency: 'ARS', symbol: '$', provinces: [] },
+  { code: 'AT', name: 'Austria', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'BD', name: 'Bangladesh', currency: 'BDT', symbol: '৳', provinces: [] },
+  { code: 'BE', name: 'Belgium', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'BR', name: 'Brazil', currency: 'BRL', symbol: 'R$', provinces: ['Acre','Alagoas','Amapá','Amazonas','Bahia','Ceará','Distrito Federal','Espírito Santo','Goiás','Maranhão','Mato Grosso','Mato Grosso do Sul','Minas Gerais','Pará','Paraíba','Paraná','Pernambuco','Piauí','Rio de Janeiro','Rio Grande do Norte','Rio Grande do Sul','Rondônia','Roraima','Santa Catarina','São Paulo','Sergipe','Tocantins'] },
+  { code: 'BN', name: 'Brunei', currency: 'BND', symbol: 'B$', provinces: [] },
+  { code: 'BG', name: 'Bulgaria', currency: 'BGN', symbol: 'лв', provinces: [] },
+  { code: 'KH', name: 'Cambodia', currency: 'KHR', symbol: '៛', provinces: [] },
+  { code: 'CM', name: 'Cameroon', currency: 'XAF', symbol: 'CFA', provinces: [] },
+  { code: 'CL', name: 'Chile', currency: 'CLP', symbol: '$', provinces: [] },
+  { code: 'CN', name: 'China', currency: 'CNY', symbol: '¥', provinces: [] },
+  { code: 'CO', name: 'Colombia', currency: 'COP', symbol: '$', provinces: [] },
+  { code: 'HR', name: 'Croatia', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'CY', name: 'Cyprus', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'CZ', name: 'Czech Republic', currency: 'CZK', symbol: 'Kč', provinces: [] },
+  { code: 'DK', name: 'Denmark', currency: 'DKK', symbol: 'kr', provinces: [] },
+  { code: 'EG', name: 'Egypt', currency: 'EGP', symbol: '£', provinces: [] },
+  { code: 'ET', name: 'Ethiopia', currency: 'ETB', symbol: 'Br', provinces: [] },
+  { code: 'FI', name: 'Finland', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'FR', name: 'France', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'DE', name: 'Germany', currency: 'EUR', symbol: '€', provinces: ['Baden-Württemberg','Bavaria','Berlin','Brandenburg','Bremen','Hamburg','Hesse','Mecklenburg-Vorpommern','Lower Saxony','North Rhine-Westphalia','Rhineland-Palatinate','Saarland','Saxony','Saxony-Anhalt','Schleswig-Holstein','Thuringia'] },
+  { code: 'GH', name: 'Ghana', currency: 'GHS', symbol: '₵', provinces: [] },
+  { code: 'GR', name: 'Greece', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'HK', name: 'Hong Kong', currency: 'HKD', symbol: 'HK$', provinces: [] },
+  { code: 'HU', name: 'Hungary', currency: 'HUF', symbol: 'Ft', provinces: [] },
+  { code: 'IS', name: 'Iceland', currency: 'ISK', symbol: 'kr', provinces: [] },
+  { code: 'ID', name: 'Indonesia', currency: 'IDR', symbol: 'Rp', provinces: [] },
+  { code: 'IR', name: 'Iran', currency: 'IRR', symbol: '﷼', provinces: [] },
+  { code: 'IQ', name: 'Iraq', currency: 'IQD', symbol: 'ع.د', provinces: [] },
+  { code: 'IE', name: 'Ireland', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'IL', name: 'Israel', currency: 'ILS', symbol: '₪', provinces: [] },
+  { code: 'IT', name: 'Italy', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'JP', name: 'Japan', currency: 'JPY', symbol: '¥', provinces: [] },
+  { code: 'JO', name: 'Jordan', currency: 'JOD', symbol: 'JD', provinces: [] },
+  { code: 'KZ', name: 'Kazakhstan', currency: 'KZT', symbol: '₸', provinces: [] },
+  { code: 'KE', name: 'Kenya', currency: 'KES', symbol: 'KSh', provinces: [] },
+  { code: 'KW', name: 'Kuwait', currency: 'KWD', symbol: 'KD', provinces: [] },
+  { code: 'LB', name: 'Lebanon', currency: 'LBP', symbol: 'LL', provinces: [] },
+  { code: 'MY', name: 'Malaysia', currency: 'MYR', symbol: 'RM', provinces: ['Johor','Kedah','Kelantan','Kuala Lumpur','Labuan','Melaka','Negeri Sembilan','Pahang','Penang','Perak','Perlis','Putrajaya','Sabah','Sarawak','Selangor','Terengganu'] },
+  { code: 'MX', name: 'Mexico', currency: 'MXN', symbol: '$', provinces: [] },
+  { code: 'MA', name: 'Morocco', currency: 'MAD', symbol: 'MAD', provinces: [] },
+  { code: 'MM', name: 'Myanmar', currency: 'MMK', symbol: 'K', provinces: [] },
+  { code: 'NP', name: 'Nepal', currency: 'NPR', symbol: 'Rs', provinces: [] },
+  { code: 'NL', name: 'Netherlands', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'NZ', name: 'New Zealand', currency: 'NZD', symbol: 'NZ$', provinces: ['Auckland','Bay of Plenty','Canterbury','Gisborne','Hawke's Bay','Manawatu-Whanganui','Marlborough','Nelson','Northland','Otago','Southland','Taranaki','Tasman','Waikato','Wellington','West Coast'] },
+  { code: 'NG', name: 'Nigeria', currency: 'NGN', symbol: '₦', provinces: [] },
+  { code: 'NO', name: 'Norway', currency: 'NOK', symbol: 'kr', provinces: [] },
+  { code: 'OM', name: 'Oman', currency: 'OMR', symbol: 'OMR', provinces: [] },
+  { code: 'PK', name: 'Pakistan', currency: 'PKR', symbol: 'Rs', provinces: ['Balochistan','Gilgit-Baltistan','Islamabad Capital Territory','Khyber Pakhtunkhwa','Punjab','Sindh','Azad Kashmir'] },
+  { code: 'PH', name: 'Philippines', currency: 'PHP', symbol: '₱', provinces: [] },
+  { code: 'PL', name: 'Poland', currency: 'PLN', symbol: 'zł', provinces: [] },
+  { code: 'PT', name: 'Portugal', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'QA', name: 'Qatar', currency: 'QAR', symbol: 'QR', provinces: [] },
+  { code: 'RO', name: 'Romania', currency: 'RON', symbol: 'lei', provinces: [] },
+  { code: 'RU', name: 'Russia', currency: 'RUB', symbol: '₽', provinces: [] },
+  { code: 'SA', name: 'Saudi Arabia', currency: 'SAR', symbol: 'SR', provinces: ['Riyadh','Makkah','Madinah','Qassim','Eastern Province','Asir','Tabuk','Hail','Northern Borders','Jazan','Najran','Al Bahah','Al Jawf'] },
+  { code: 'SG', name: 'Singapore', currency: 'SGD', symbol: 'S$', provinces: [] },
+  { code: 'ZA', name: 'South Africa', currency: 'ZAR', symbol: 'R', provinces: ['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','North West','Northern Cape','Western Cape'] },
+  { code: 'KR', name: 'South Korea', currency: 'KRW', symbol: '₩', provinces: [] },
+  { code: 'ES', name: 'Spain', currency: 'EUR', symbol: '€', provinces: [] },
+  { code: 'LK', name: 'Sri Lanka', currency: 'LKR', symbol: 'Rs', provinces: [] },
+  { code: 'SE', name: 'Sweden', currency: 'SEK', symbol: 'kr', provinces: [] },
+  { code: 'CH', name: 'Switzerland', currency: 'CHF', symbol: 'CHF', provinces: [] },
+  { code: 'TW', name: 'Taiwan', currency: 'TWD', symbol: 'NT$', provinces: [] },
+  { code: 'TZ', name: 'Tanzania', currency: 'TZS', symbol: 'TSh', provinces: [] },
+  { code: 'TH', name: 'Thailand', currency: 'THB', symbol: '฿', provinces: [] },
+  { code: 'TN', name: 'Tunisia', currency: 'TND', symbol: 'DT', provinces: [] },
+  { code: 'TR', name: 'Turkey', currency: 'TRY', symbol: '₺', provinces: [] },
+  { code: 'UG', name: 'Uganda', currency: 'UGX', symbol: 'USh', provinces: [] },
+  { code: 'UA', name: 'Ukraine', currency: 'UAH', symbol: '₴', provinces: [] },
+  { code: 'UY', name: 'Uruguay', currency: 'UYU', symbol: '$', provinces: [] },
+  { code: 'UZ', name: 'Uzbekistan', currency: 'UZS', symbol: 'лв', provinces: [] },
+  { code: 'VE', name: 'Venezuela', currency: 'VES', symbol: 'Bs', provinces: [] },
+  { code: 'VN', name: 'Vietnam', currency: 'VND', symbol: '₫', provinces: [] },
+  { code: 'YE', name: 'Yemen', currency: 'YER', symbol: '﷼', provinces: [] },
+  { code: 'ZM', name: 'Zambia', currency: 'ZMW', symbol: 'ZK', provinces: [] },
+  { code: 'ZW', name: 'Zimbabwe', currency: 'ZWL', symbol: 'Z$', provinces: [] },
 ];
 
 // ─── THEMES ───────────────────────────────────────────────────────────────────
@@ -213,6 +293,10 @@ function applyTheme(themeId) {
   const root = document.documentElement;
   Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v));
 }
+
+
+// ─── PRACTICE TYPES (managed by admin) ───────────────────────────────────────
+const DEFAULT_PRACTICE_TYPES = ['RMT', 'Physiotherapist', 'Osteopathist', 'Chiropractor', 'Others'];
 
 // ─── INITIAL DATA ─────────────────────────────────────────────────────────────
 const INITIAL_CLINICS = [
@@ -780,6 +864,7 @@ const Icon = ({ name, ...props }) => {
     search: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
     filter: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
     warning: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+    users: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
     settings: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
     pdf: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h1.5a1.5 1.5 0 000-3H9v6m7-6v6m0-3h-2m5-3v6"/></svg>,
     lock: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>,
@@ -1191,6 +1276,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
   const [filterClinic, setFilterClinic] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(new Set());
+  const [perPage, setPerPage] = useState(10);
   const [voiceMode, setVoiceMode] = useState(false);
   const [recording, setRecording] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState("");
@@ -1198,7 +1284,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
   const [voiceError, setVoiceError] = useState("");
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const PER_PAGE = 10;
+  const PER_PAGE = perPage;
 
   const activeClinics = clinics.filter(c => c.status === "active");
   const selectedClinic = activeClinics.find(c => c.id === form.clinicId);
@@ -1426,6 +1512,18 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
                 <button key={p} className={`page-btn${page === p ? " active" : ""}`} onClick={() => setPage(p)}>{p}</button>
               ))}
               <button className="page-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
+              <span style={{ marginLeft: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                Per page:
+                <select className="form-select" style={{ padding: '3px 8px', fontSize: 12, width: 'auto' }} value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}>
+                  {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </span>
+              <span style={{ marginLeft: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                Per page:
+                <select className="form-select" style={{ padding: '3px 8px', fontSize: 12, width: 'auto' }} value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1); }}>
+                  {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </span>
             </div>
           </div>
         )}
@@ -1627,7 +1725,7 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics, company }) => {
   const [genForm, setGenForm] = useState({ clinicId: "", periodFrom: "", periodTo: "" });
   const [preview, setPreview] = useState(null);
   const [page, setPage] = useState(1);
-  const PER_PAGE = 10;
+  const PER_PAGE = perPage;
 
   const activeClinics = clinics.filter(c => c.status === "active");
 
@@ -2054,6 +2152,12 @@ const CSVImport = ({ sessions, setSessions, clinics, setClinics }) => {
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const MAX_MB = 2;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      alert(`File too large. Maximum size is ${MAX_MB} MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)} MB.`);
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const parsed = parseCSV(ev.target.result);
@@ -2260,6 +2364,14 @@ const INITIAL_COMPANY = {
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 const Settings = ({ smtp, setSmtp, company, setCompany, themeId, setThemeId }) => {
   const [activeTab, setActiveTab] = useState("smtp");
+  const [practiceTypes, setPracticeTypesRaw] = useState(() => {
+    try { const s = localStorage.getItem('kinevie-practice-types'); return s ? JSON.parse(s) : DEFAULT_PRACTICE_TYPES; } catch { return DEFAULT_PRACTICE_TYPES; }
+  });
+  const [newPType, setNewPType] = useState('');
+  const savePracticeTypes = (types) => {
+    setPracticeTypesRaw(types);
+    localStorage.setItem('kinevie-practice-types', JSON.stringify(types));
+  };
   const [showPassword, setShowPassword] = useState(false);
   const [testStatus, setTestStatus] = useState(null); // null | "testing" | "success" | "error"
   const [testMsg, setTestMsg] = useState("");
@@ -2304,6 +2416,7 @@ const Settings = ({ smtp, setSmtp, company, setCompany, themeId, setThemeId }) =
         <button className={`tab${activeTab === "smtp" ? " active" : ""}`} onClick={() => setActiveTab("smtp")}>Email / SMTP</button>
         <button className={`tab${activeTab === "company" ? " active" : ""}`} onClick={() => setActiveTab("company")}>Company Info</button>
         <button className={`tab${activeTab === "theme" ? " active" : ""}`} onClick={() => setActiveTab("theme")}>🎨 Theme</button>
+        <button className={`tab${activeTab === "practices" ? " active" : ""}`} onClick={() => setActiveTab("practices")}>🩺 Practice Types</button>
       </div>
 
       {activeTab === "smtp" && (
@@ -2489,6 +2602,35 @@ const Settings = ({ smtp, setSmtp, company, setCompany, themeId, setThemeId }) =
         </div>
       )}
 
+      {activeTab === "practices" && (
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Practice Type Options</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Manage options shown in registration form</span>
+          </div>
+          <div className="card-body">
+            <div style={{ marginBottom: 16 }}>
+              {practiceTypes.map((pt, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, background: 'var(--table-head-bg)', borderRadius: 8, padding: '8px 12px', border: '1px solid var(--border)' }}>
+                  <span style={{ flex: 1, fontWeight: 600, fontSize: 13 }}>🩺 {pt}</span>
+                  {!DEFAULT_PRACTICE_TYPES.includes(pt) && (
+                    <button className="btn btn-danger btn-sm" onClick={() => savePracticeTypes(practiceTypes.filter((_, j) => j !== i))}>Remove</button>
+                  )}
+                  {DEFAULT_PRACTICE_TYPES.includes(pt) && (
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Default</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input className="form-input" style={{ flex: 1 }} placeholder="Add new practice type…" value={newPType}
+                onChange={e => setNewPType(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && newPType.trim() && !practiceTypes.includes(newPType.trim())) { savePracticeTypes([...practiceTypes, newPType.trim()]); setNewPType(''); }}} />
+              <button className="btn btn-primary" onClick={() => { if (newPType.trim() && !practiceTypes.includes(newPType.trim())) { savePracticeTypes([...practiceTypes, newPType.trim()]); setNewPType(''); } }}>Add</button>
+            </div>
+          </div>
+        </div>
+      )}
       {activeTab === "company" && (
         <div className="card">
           <div className="card-header"><span className="card-title">Company Information</span></div>
@@ -2543,16 +2685,20 @@ const Settings = ({ smtp, setSmtp, company, setCompany, themeId, setThemeId }) =
     </div>
   );
 };
-const NAV = [
+const NAV_PRACTITIONER = [
   { id: "dashboard", label: "Dashboard", icon: "dashboard", section: "main" },
   { id: "clinics", label: "Manage Clinics", icon: "clinic", section: "main" },
   { id: "sessions", label: "Session Logs", icon: "sessions", section: "main" },
   { id: "invoices", label: "Invoices", icon: "invoice", section: "main" },
   { id: "expenses", label: "Expenses", icon: "expense", section: "main" },
   { id: "import", label: "CSV Import", icon: "import", section: "tools" },
-  { id: "settings", label: "Admin Settings", icon: "settings", section: "tools" },
-  { id: "users", label: "User Management", icon: "users", section: "tools", adminOnly: true },
 ];
+const NAV_ADMIN = [
+  { id: "dashboard", label: "Dashboard", icon: "dashboard", section: "main" },
+  { id: "users", label: "User Management", icon: "users", section: "main" },
+  { id: "settings", label: "Admin Settings", icon: "settings", section: "tools" },
+];
+const NAV = NAV_PRACTITIONER; // kept for legacy refs
 
 
 const PAGE_TITLES = {
@@ -2571,12 +2717,111 @@ const PAGE_TITLES = {
 
 // ─── MAIN APP WITH AUTH ───────────────────────────────────────────────────────
 
+
+// ─── ADMIN DASHBOARD ──────────────────────────────────────────────────────────
+const AdminDashboard = ({ allUsers }) => {
+  const total = allUsers.length;
+  const pending = allUsers.filter(u => u.status === 'pending').length;
+  const active = allUsers.filter(u => u.status === 'active').length;
+  const disabled = allUsers.filter(u => u.status === 'disabled').length;
+  const admins = allUsers.filter(u => u.role === 'administrator').length;
+  const practitioners = allUsers.filter(u => u.role === 'practitioner').length;
+  const byType = {};
+  allUsers.forEach(u => { if (u.practiceType) { byType[u.practiceType] = (byType[u.practiceType]||0)+1; } });
+  const recentRegs = [...allUsers].sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
+
+  const StatCard = ({ label, value, sub, color }) => (
+    <div className="stat-card" style={{ borderTop: `3px solid ${color}` }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 32, fontWeight: 800, color }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginBottom: 24 }}>
+        <StatCard label="Total Users" value={total} sub="All registered accounts" color="var(--primary)" />
+        <StatCard label="Pending Approval" value={pending} sub="Awaiting admin action" color="#f59e0b" />
+        <StatCard label="Active Users" value={active} sub="Can log in" color="#16a34a" />
+        <StatCard label="Disabled" value={disabled} sub="Locked or rejected" color="#ef4444" />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Users by Role</span></div>
+          <div style={{ padding: 20 }}>
+            {[['⚙️ Administrators', admins, '#7c3aed'], ['🩺 Practitioners', practitioners, 'var(--accent)']].map(([label, val, color]) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color }}>{val}</span>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 4, background: 'var(--border)' }}>
+                    <div style={{ height: 8, borderRadius: 4, background: color, width: total ? `${(val/total*100).toFixed(0)}%` : '0%', transition: 'width 0.6s' }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Account Status Distribution</span></div>
+          <div style={{ padding: 20 }}>
+            {[['✓ Active', active, '#16a34a'], ['⏳ Pending', pending, '#f59e0b'], ['⊘ Disabled', disabled, '#ef4444'], ['✗ Rejected', allUsers.filter(u=>u.status==='rejected').length, '#94a3b8']].map(([label, val, color]) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 13, color: 'var(--text)' }}>{label}</span>
+                <span style={{ fontWeight: 700, fontSize: 14, color }}>{val}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      {Object.keys(byType).length > 0 && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="card-header"><span className="card-title">Practitioners by Practice Type</span></div>
+          <div style={{ padding: '10px 20px' }}>
+            {Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([type, count]) => (
+              <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <span style={{ width: 160, fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>🩺 {type}</span>
+                <div style={{ flex: 1, height: 10, borderRadius: 5, background: 'var(--border)' }}>
+                  <div style={{ height: 10, borderRadius: 5, background: 'var(--accent)', width: `${(count/practitioners*100).toFixed(0)}%`, transition: 'width 0.6s' }} />
+                </div>
+                <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 13, width: 30, textAlign: 'right' }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="card">
+        <div className="card-header"><span className="card-title">Recent Registrations</span></div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Practice Type</th><th>Status</th><th>Joined</th></tr></thead>
+          <tbody>
+            {recentRegs.map(u => (
+              <tr key={u.id}>
+                <td style={{ fontWeight: 600 }}>{u.fullName}</td>
+                <td style={{ fontSize: 12 }}>{u.email}</td>
+                <td><span style={{ fontSize: 11, fontWeight: 700, background: 'var(--badge-active-bg)', color: 'var(--badge-active-text)', padding: '2px 8px', borderRadius: 10, textTransform:'capitalize' }}>{u.role}</span></td>
+                <td style={{ fontSize: 12 }}>{u.practiceType || '—'}</td>
+                <td><span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: u.status==='active'?'#dcfce7':u.status==='pending'?'#fef3c7':'#fee2e2', color: u.status==='active'?'#16a34a':u.status==='pending'?'#92400e':'#dc2626', textTransform:'capitalize' }}>{u.status}</span></td>
+                <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 // ─── USER MANAGEMENT (Admin only) ────────────────────────────────────────────
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editModal, setEditModal] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [userSearch, setUserSearch] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -2587,6 +2832,7 @@ const UserManagement = () => {
   useEffect(() => { load(); }, []);
 
   const pending = users.filter(u => u.status === 'pending');
+  const filteredUsers = userSearch.trim() ? users.filter(u => [u.fullName, u.email, u.role, u.status, u.rmtNumber].join(' ').toLowerCase().includes(userSearch.toLowerCase())) : users;
 
   const updateStatus = async (id, status) => {
     try {
@@ -2625,7 +2871,14 @@ const UserManagement = () => {
       <div className="card">
         <div className="card-header">
           <span className="card-title">All Users</span>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{users.length} total</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ position: 'relative' }}>
+              <Icon name="search" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: 'var(--text-muted)' }} />
+              <input className="form-input" style={{ paddingLeft: 32, width: 220, fontSize: 13 }} placeholder="Search name, email, role…"
+                value={userSearch} onChange={e => setUserSearch(e.target.value)} />
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{filteredUsers.length} of {users.length}</span>
+          </div>
         </div>
         {loading ? <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div> : (
           <table>
@@ -2633,7 +2886,7 @@ const UserManagement = () => {
               <th>Name</th><th>Email</th><th>Role</th><th>RMT #</th><th>Status</th><th>Joined</th><th>Actions</th>
             </tr></thead>
             <tbody>
-              {users.map(u => (
+              {filteredUsers.map(u => (
                 <tr key={u.id}>
                   <td style={{ fontWeight: 600 }}>{u.fullName}</td>
                   <td style={{ fontSize: 13 }}>{u.email}</td>
@@ -2816,6 +3069,7 @@ function MainApp() {
   const [smtp, setSmtpRaw] = useState(INITIAL_SMTP);
   const [company, setCompanyRaw] = useState(INITIAL_COMPANY);
   const [pendingCount, setPendingCount] = useState(0);
+  const [allUsers, setAllUsers] = useState([]);
   const [weather, setWeather] = useState(null);
 
   // Fetch location + weather on mount
@@ -2827,11 +3081,12 @@ function MainApp() {
         // Open-Meteo: free, no API key
         const [wRes, gRes] = await Promise.all([
           fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&temperature_unit=celsius`),
-          fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`),
+          fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`, { headers: { 'Accept-Language': 'en' } }),
         ]);
         const [wData, gData] = await Promise.all([wRes.json(), gRes.json()]);
-        const city = gData.address?.city || gData.address?.town || gData.address?.village || gData.address?.county || '';
-        const country = gData.address?.country_code?.toUpperCase() || '';
+        const addr = gData.address || {};
+        const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.village || addr.county || addr.state_district || addr.state || '';
+        const country = addr.country_code?.toUpperCase() || '';
         const temp = Math.round(wData.current?.temperature_2m);
         const code = wData.current?.weather_code;
         const icon = code <= 1 ? '☀️' : code <= 3 ? '⛅' : code <= 48 ? '🌫️' : code <= 67 ? '🌧️' : code <= 77 ? '❄️' : code <= 82 ? '🌦️' : '⛈️';
@@ -2876,6 +3131,7 @@ function MainApp() {
       // Load pending user count for admin
       if (user?.role === 'administrator') {
         authApi.getUsers().then(users => {
+          setAllUsers(users);
           setPendingCount(users.filter(u => u.status === 'pending').length);
         }).catch(()=>{});
       }
@@ -2998,23 +3254,23 @@ function MainApp() {
             <span>Smart Practice Manager</span>
           </div>
           <nav className="sidebar-nav">
-            <div className="nav-section-label">Main</div>
-            {NAV.filter(n => n.section === 'main').map(n => (
-              <div key={n.id} className={`nav-item${page === n.id ? ' active' : ''}`} onClick={() => setPage(n.id)}>
-                <Icon name={n.icon} />
-                {n.label}
-              </div>
-            ))}
-            <div className="nav-section-label">Tools</div>
-            {NAV.filter(n => n.section === 'tools' && (n.id !== 'settings' || user?.role === 'administrator') && (n.id !== 'users' || user?.role === 'administrator')).map(n => (
-              <div key={n.id} className={`nav-item${page === n.id ? ' active' : ''}`} onClick={() => setPage(n.id)} style={{ position: 'relative' }}>
-                <Icon name={n.icon} />
-                {n.label}
-                {n.id === 'users' && pendingCount > 0 && (
-                  <span style={{ marginLeft: 'auto', background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{pendingCount}</span>
-                )}
-              </div>
-            ))}
+            {(user?.role === 'administrator' ? NAV_ADMIN : NAV_PRACTITIONER).map((n, idx, arr) => {
+              const prevSection = arr[idx - 1]?.section;
+              return (
+                <div key={n.id}>
+                  {n.section !== prevSection && (
+                    <div className="nav-section-label">{n.section === 'main' ? 'Main' : 'Tools'}</div>
+                  )}
+                  <div className={`nav-item${page === n.id ? ' active' : ''}`} onClick={() => setPage(n.id)} style={{ position: 'relative' }}>
+                    <Icon name={n.icon} style={{ width: 18, height: 18 }} />
+                    {n.label}
+                    {n.id === 'users' && pendingCount > 0 && (
+                      <span style={{ marginLeft: 'auto', background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{pendingCount}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </nav>
           <div className="sidebar-footer">
             <div style={{ fontWeight: 600, color: 'rgba(253,245,232,0.9)', fontSize: 13, marginBottom: 2 }}>{user?.fullName}</div>
@@ -3064,7 +3320,8 @@ function MainApp() {
             </div>
           </div>
           <div className="content">
-            {page === 'dashboard'  && <Dashboard sessions={sessions} invoices={invoices} expenses={expenses} clinics={clinics} />}
+            {page === 'dashboard' && user?.role === 'administrator' && <AdminDashboard allUsers={allUsers} />}
+            {page === 'dashboard' && user?.role !== 'administrator' && <Dashboard sessions={sessions} invoices={invoices} expenses={expenses} clinics={clinics} />}
             {page === 'clinics'    && <Clinics clinics={clinics} setClinics={setClinics} />}
             {page === 'sessions'   && <Sessions sessions={sessions} setSessions={setSessions} clinics={clinics} />}
             {page === 'invoices'   && <Invoices invoices={invoices} setInvoices={setInvoices} sessions={sessions} clinics={clinics} company={company} />}

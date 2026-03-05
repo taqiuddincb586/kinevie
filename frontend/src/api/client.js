@@ -23,7 +23,14 @@ async function request(method, path, body) {
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || data.errors?.[0]?.msg || 'Request failed');
+  if (!res.ok) {
+    const msg = data.error || data.errors?.[0]?.msg || data.message || 'Request failed';
+    // Suppress internal JS error leakage
+    if (msg.includes('Cannot read') || msg.includes('.tokens') || msg.includes('undefined')) {
+      throw new Error('Invalid email or password. Please check your credentials and try again.');
+    }
+    throw new Error(msg);
+  }
   return data;
 }
 

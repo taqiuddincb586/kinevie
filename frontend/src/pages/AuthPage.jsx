@@ -181,7 +181,7 @@ export default function AuthPage() {
   const [localError, setLocalError] = useState('');
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [regForm, setRegForm] = useState({ email: '', password: '', confirmPassword: '', fullName: '', rmtNumber: '', role: 'practitioner' });
+  const [regForm, setRegForm] = useState({ email: '', password: '', confirmPassword: '', fullName: '', registrationNumber: '', practiceType: '' });
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -189,7 +189,12 @@ export default function AuthPage() {
     try {
       await login(loginForm.email, loginForm.password);
     } catch (err) {
-      setLocalError(err.message);
+      const msg = err.message || '';
+      if (msg.includes('tokens') || msg.includes('undefined') || msg.includes('Cannot read')) {
+        setLocalError('Invalid email address or password. Please try again.');
+      } else {
+        setLocalError(err.message);
+      }
     }
   };
 
@@ -207,10 +212,11 @@ export default function AuthPage() {
         email: regForm.email,
         password: regForm.password,
         fullName: regForm.fullName,
-        rmtNumber: regForm.rmtNumber,
-        role: regForm.role,
+        rmtNumber: regForm.registrationNumber,
+        practiceType: regForm.practiceType,
+        role: 'practitioner',
       });
-      if (result?.pending) { setRegPending(true); }
+      if (result?.pending) { setRegPending(true); setRegForm({ email: '', password: '', confirmPassword: '', fullName: '', registrationNumber: '', practiceType: '' }); }
     } catch (err) {
       setLocalError(err.message);
     }
@@ -252,23 +258,15 @@ export default function AuthPage() {
           </div>
 
           <div className="auth-tabs">
-            <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => { setTab('login'); setLocalError(''); }}>
+            <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => { setTab('login'); setLocalError(''); setRegForm({ email: '', password: '', confirmPassword: '', fullName: '', registrationNumber: '', practiceType: '' }); setRegPending(false); }}>
               Sign In
             </button>
-            <button className={`auth-tab${tab === 'register' ? ' active' : ''}`} onClick={() => { setTab('register'); setLocalError(''); }}>
+            <button className={`auth-tab${tab === 'register' ? ' active' : ''}`} onClick={() => { setTab('register'); setLocalError(''); setRegForm({ email: '', password: '', confirmPassword: '', fullName: '', registrationNumber: '', practiceType: '' }); }}>
               Create Account
             </button>
           </div>
 
-          {regPending && (
-            <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'center' }}>
-              <div style={{ fontSize: 22, marginBottom: 8 }}>📬</div>
-              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 4 }}>Registration Submitted!</div>
-              <div style={{ fontSize: 13, color: '#166534' }}>Your account is pending administrator approval. You'll receive an email once approved.</div>
-              <button style={{ marginTop: 12, background: 'none', border: 'none', color: '#16a34a', fontWeight: 600, cursor: 'pointer', fontSize: 13 }} onClick={() => { setRegPending(false); setTab('login'); }}>← Back to Sign In</button>
-            </div>
-          )}
-          {!regPending && displayError && <div className="auth-error">⚠ {displayError}</div>}
+          {displayError && <div className="auth-error">⚠ {displayError}</div>}
 
           {tab === 'login' ? (
             <form onSubmit={handleLogin} autoComplete="on">
@@ -321,27 +319,16 @@ export default function AuthPage() {
                 />
               </div>
               <div className="auth-form-group">
-                <label className="auth-label">Account Type</label>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  {[
-                    { value: 'practitioner', label: '🩺 Practitioner', desc: 'Log sessions & view data' },
-                    { value: 'administrator', label: '⚙️ Administrator', desc: 'Full access & settings' },
-                  ].map(opt => (
-                    <div
-                      key={opt.value}
-                      onClick={() => setRegForm(f => ({ ...f, role: opt.value }))}
-                      style={{
-                        flex: 1, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
-                        border: `2px solid ${regForm.role === opt.value ? C.accent : C.border}`,
-                        background: regForm.role === opt.value ? C.accentLight : C.surface,
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>{opt.label}</div>
-                      <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{opt.desc}</div>
-                    </div>
-                  ))}
-                </div>
+                <label className="auth-label">Practice Type *</label>
+                <select className="auth-input" style={{ cursor: 'pointer' }} value={regForm.practiceType}
+                  onChange={e => setRegForm(f => ({ ...f, practiceType: e.target.value }))} required>
+                  <option value="">Select your practice type…</option>
+                  <option value="RMT">RMT – Registered Massage Therapist</option>
+                  <option value="Physiotherapist">Physiotherapist</option>
+                  <option value="Osteopathist">Osteopathist</option>
+                  <option value="Chiropractor">Chiropractor</option>
+                  <option value="Others">Others</option>
+                </select>
               </div>
               <div className="auth-row">
                 <div className="auth-form-group">
@@ -357,13 +344,13 @@ export default function AuthPage() {
                   />
                 </div>
                 <div className="auth-form-group">
-                  <label className="auth-label">RMT Number <span style={{fontWeight:400,color:'#94a3b8'}}>(optional)</span></label>
+                  <label className="auth-label">Registration Number <span style={{fontWeight:400,color:'#94a3b8'}}>(optional)</span></label>
                   <input
                     className="auth-input"
                     type="text"
                     placeholder="e.g. 12345"
-                    value={regForm.rmtNumber}
-                    onChange={e => setRegForm(f => ({ ...f, rmtNumber: e.target.value }))}
+                    value={regForm.registrationNumber || ''}
+                    onChange={e => setRegForm(f => ({ ...f, registrationNumber: e.target.value }))}
                   />
                 </div>
               </div>
@@ -401,6 +388,22 @@ export default function AuthPage() {
           )}
         </div>
       </div>
+      {regPending && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+          <div style={{ background:'#fff', borderRadius:20, padding:'48px 40px', maxWidth:420, width:'100%', textAlign:'center', boxShadow:'0 25px 60px rgba(0,0,0,0.35)' }}>
+            <div style={{ fontSize:60, marginBottom:16 }}>📬</div>
+            <h2 style={{ margin:'0 0 12px', color:'#15803d', fontSize:22 }}>Registration Submitted!</h2>
+            <p style={{ color:'#166534', fontSize:14, lineHeight:1.7, margin:'0 0 28px' }}>
+              Your account is pending administrator approval.<br/>
+              You'll receive an email once your account is activated.
+            </p>
+            <button onClick={() => { setRegPending(false); setTab('login'); }}
+              style={{ background:'linear-gradient(135deg,#c4a882,#a08050)', color:'#fff', border:'none', borderRadius:10, padding:'13px 32px', fontSize:15, fontWeight:700, cursor:'pointer', width:'100%', fontFamily:'inherit' }}>
+              Back to Sign In →
+            </button>
+          </div>
+        </div>
+      )}
       {fpStep > 0 && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ background: '#fff', borderRadius: 20, padding: '40px 36px', maxWidth: 420, width: '100%', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>

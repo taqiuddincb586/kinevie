@@ -16,6 +16,7 @@ const signToken = (userId, email, role) =>
 const safeUser = (u) => ({
   id: u.id, email: u.email, fullName: u.full_name,
   rmtNumber: u.rmt_number, role: u.role, status: u.status, theme: u.theme || 'warm-beige',
+  practiceType: u.practice_type || '',
 });
 
 async function sendEmail({ to, subject, html }) {
@@ -45,7 +46,7 @@ router.post('/register', [body('email').isEmail().normalizeEmail({ gmail_remove_
 async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { email, password, fullName, rmtNumber, role } = req.body;
+  const { email, password, fullName, rmtNumber, role, practiceType } = req.body;
   const userRole = role === 'administrator' ? 'administrator' : 'practitioner';
   const status = userRole === 'administrator' ? 'active' : 'pending';
   try {
@@ -53,8 +54,8 @@ async (req, res) => {
     if (existing.rows.length > 0) return res.status(409).json({ error: 'An account with this email already exists' });
     const hash = await bcrypt.hash(password, 12);
     const result = await pool.query(
-      `INSERT INTO users (email, password, full_name, rmt_number, role, status) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, email, full_name, rmt_number, role, status`,
-      [email, hash, fullName, rmtNumber||null, userRole, status]
+      `INSERT INTO users (email, password, full_name, rmt_number, role, status, practice_type) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, email, full_name, rmt_number, role, status, practice_type`,
+      [email, hash, fullName, rmtNumber||null, userRole, status, practiceType||null]
     );
     const user = result.rows[0];
     await pool.query(`INSERT INTO settings (user_id, smtp, company) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [user.id, '{}', '{}']);
@@ -73,7 +74,7 @@ async (req, res) => {
 });
 
 // LOGIN
-router.post('/login', [body('email').isEmail().normalizeEmail({ gmail_remove_dots: false }), body('password').notEmpty()],
+router.post('/login', [body('email').isEmail().withMessage('Please enter a valid email address').normalizeEmail({ gmail_remove_dots: false }), body('password').notEmpty().withMessage('Password is required')],
 async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -189,8 +190,8 @@ router.post('/reset-password', async (req, res) => {
 router.get('/users', require('../middleware/auth'), async (req, res) => {
   if (req.userRole !== 'administrator') return res.status(403).json({ error: 'Admin only' });
   try {
-    const { rows } = await pool.query('SELECT id,email,full_name,rmt_number,role,status,login_attempts,created_at FROM users ORDER BY created_at DESC');
-    res.json(rows.map(u => ({ id:u.id, email:u.email, fullName:u.full_name, rmtNumber:u.rmt_number, role:u.role, status:u.status, loginAttempts:u.login_attempts, createdAt:u.created_at })));
+    const { rows } = await pool.query('SELECT id,email,full_name,rmt_number,role,status,practice_type,login_attempts,created_at FROM users ORDER BY created_at DESC');
+    res.json(rows.map(u => ({ id:u.id, email:u.email, fullName:u.full_name, rmtNumber:u.rmt_number, role:u.role, status:u.status, practiceType:u.practice_type||'', loginAttempts:u.login_attempts, createdAt:u.created_at })));
   } catch(err) { res.status(500).json({ error: 'Server error' }); }
 });
 
