@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3001;
 
 // ─── SECURITY MIDDLEWARE ──────────────────────────────────────────────────────
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: false, // frontend handles its own CSP
 }));
 
 app.use(cors({
@@ -40,6 +40,7 @@ const { expensesRouter, settingsRouter } = require('./routes/other');
 app.use('/api/expenses', expensesRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/email', require('./routes/email'));
+app.use('/api/bookings', require('./routes/bookings'));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));

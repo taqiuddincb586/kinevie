@@ -70,6 +70,15 @@ export const api = {
   saveSettings: (b) => request('PUT', '/settings', b),
 };
 
+// Bookings
+export const bookingsApi = {
+  getAll: () => request('GET', '/bookings'),
+  create: (b) => request('POST', '/bookings', b),
+  update: (id, b) => request('PUT', `/bookings/${id}`, b),
+  delete: (id) => request('DELETE', `/bookings/${id}`),
+  convert: (id) => request('POST', `/bookings/${id}/convert`),
+};
+
 // Email
 export const emailApi = {
   send: (body) => request('POST', '/email/send', body),

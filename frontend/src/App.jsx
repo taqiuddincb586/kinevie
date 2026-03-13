@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { api, emailApi, authApi } from './api/client';
+import { api, emailApi, authApi, bookingsApi } from './api/client';
 import AuthPage from './pages/AuthPage';
 
 
@@ -850,6 +850,7 @@ const Icon = ({ name, ...props }) => {
     dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
     clinic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
     sessions: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    calendar: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
     invoice: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
     expense: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
     import: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/></svg>,
@@ -878,7 +879,7 @@ const Icon = ({ name, ...props }) => {
 const Modal = ({ open, onClose, title, children, footer, large }) => {
   if (!open) return null;
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay">
       <div className={`modal${large ? " modal-lg" : ""}`}>
         <div className="modal-header">
           <span className="modal-title">{title}</span>
@@ -892,7 +893,7 @@ const Modal = ({ open, onClose, title, children, footer, large }) => {
 };
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
-const Dashboard = ({ sessions, invoices, expenses, clinics }) => {
+const Dashboard = ({ sessions, invoices, expenses, clinics, bookings = [] }) => {
   const [range, setRange] = useState("all");
 
   const filterDate = (date) => {
@@ -1304,6 +1305,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
     setVoiceMode(false);
     setVoiceTranscript("");
     setVoiceError("");
+    setDupeWarning(null);
     setForm({ clinicId: activeClinics[0]?.id || "", date: new Date().toISOString().split("T")[0], startTime: "", duration: "", sessionType: "RMT", clientInitial: "", notes: "" });
     setModal(true);
   };
@@ -1313,6 +1315,7 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
     setVoiceMode(true);
     setVoiceTranscript("");
     setVoiceError("");
+    setDupeWarning(null);
     setForm({ clinicId: activeClinics[0]?.id || "", date: new Date().toISOString().split("T")[0], startTime: "", duration: "", sessionType: "RMT", clientInitial: "", notes: "" });
     setModal(true);
   };
@@ -1417,15 +1420,32 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
     setModal(true);
   };
 
+  const [dupeWarning, setDupeWarning] = useState(null);
+
   const save = () => {
     const clinic = activeClinics.find(c => c.id === form.clinicId);
     if (!form.clinicId || !form.date || !form.duration) return;
+
     if (editing) {
       setSessions(prev => prev.map(s => s.id === editing ? { ...s, ...form, clinicName: clinic?.name || "" } : s));
+      setModal(false);
     } else {
+      // Duplicate check: Clinic Name, Client's Initial, Date, Start Time, Duration
+      const dur = parseInt(form.duration) || 0;
+      const existing = sessions.find(s =>
+        s.clinicId === form.clinicId &&
+        s.date === form.date &&
+        s.startTime === form.startTime &&
+        parseInt(s.duration) === dur &&
+        (s.clientInitial || '').toLowerCase() === (form.clientInitial || '').toLowerCase()
+      );
+      if (existing) {
+        setDupeWarning(existing);
+        return;
+      }
       setSessions(prev => [...prev, { id: genId(), ...form, clinicName: clinic?.name || "" }]);
+      setModal(false);
     }
-    setModal(false);
   };
 
   const del = (id) => { if (window.confirm("Delete session?")) setSessions(prev => prev.filter(s => s.id !== id)); };
@@ -1529,9 +1549,43 @@ const Sessions = ({ sessions, setSessions, clinics }) => {
         )}
       </div>
 
-      <Modal open={modal} onClose={() => { setModal(false); setRecording(false); if(mediaRecorderRef.current && recording) try{mediaRecorderRef.current.stop()}catch(e){}; }} title={editing ? "Edit Session" : voiceMode ? "🎙 Voice Log Session" : "Log Session"}
+      <Modal open={modal} onClose={() => { setModal(false); setRecording(false); setDupeWarning(null); if(mediaRecorderRef.current && recording) try{mediaRecorderRef.current.stop()}catch(e){}; }} title={editing ? "Edit Session" : voiceMode ? "🎙 Voice Log Session" : "Log Session"}
         footer={<><button className="btn btn-ghost" onClick={() => setModal(false)}>Cancel</button><button className="btn btn-primary" onClick={save}>Save Session</button></>}
       >
+        {/* Fix #4: Duplicate warning */}
+        {dupeWarning && (
+          <div style={{ marginBottom: 16, padding: '14px 16px', borderRadius: 10, background: '#fef9c3', border: '2px solid #f59e0b' }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#92400e', marginBottom: 6 }}>⚠️ Duplicate Session Detected</div>
+            <div style={{ fontSize: 13, color: '#a16207', marginBottom: 10 }}>
+              An existing session already matches these details. Please double-check before saving.
+            </div>
+            <div style={{ background: '#fff', borderRadius: 8, padding: '10px 14px', border: '1px solid #fde047', fontSize: 13, marginBottom: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 16px' }}>
+                <div><span style={{ color: '#a16207', fontWeight: 600 }}>Clinic: </span>{dupeWarning.clinicName}</div>
+                <div><span style={{ color: '#a16207', fontWeight: 600 }}>Client: </span>{dupeWarning.clientInitial || '—'}</div>
+                <div><span style={{ color: '#a16207', fontWeight: 600 }}>Date: </span>{dupeWarning.date}</div>
+                <div><span style={{ color: '#a16207', fontWeight: 600 }}>Start Time: </span>{dupeWarning.startTime}</div>
+                <div><span style={{ color: '#a16207', fontWeight: 600 }}>Duration: </span>{dupeWarning.duration} min</div>
+                <div><span style={{ color: '#a16207', fontWeight: 600 }}>Type: </span>{dupeWarning.sessionType}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setDupeWarning(null)}
+                style={{ padding: '7px 16px', borderRadius: 8, border: '1.5px solid #fca5a5', background: '#fee2e2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+                ✕ Cancel — Don't Save
+              </button>
+              <button onClick={() => {
+                const clinic = activeClinics.find(c => c.id === form.clinicId);
+                setSessions(prev => [...prev, { id: genId(), ...form, clinicName: clinic?.name || '' }]);
+                setDupeWarning(null);
+                setModal(false);
+              }}
+                style={{ padding: '7px 16px', borderRadius: 8, border: '1.5px solid #f59e0b', background: '#fef9c3', color: '#92400e', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+                Save Anyway
+              </button>
+            </div>
+          </div>
+        )}
         {voiceMode && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ background: 'var(--table-head-bg)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
@@ -1725,6 +1779,7 @@ const Invoices = ({ invoices, setInvoices, sessions, clinics, company }) => {
   const [genForm, setGenForm] = useState({ clinicId: "", periodFrom: "", periodTo: "" });
   const [preview, setPreview] = useState(null);
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const PER_PAGE = perPage;
 
   const activeClinics = clinics.filter(c => c.status === "active");
@@ -2146,93 +2201,82 @@ const CSVImport = ({ sessions, setSessions, clinics, setClinics }) => {
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState(null);
   const [missingClinics, setMissingClinics] = useState([]);
-  const [dupes, setDupes] = useState([]);
   const [step, setStep] = useState(0);
+  // Duplicate review state
+  const [dupeQueue, setDupeQueue] = useState([]); // [{newRow, existingSession}]
+  const [dupeIdx, setDupeIdx] = useState(0);
+  const [dupeChoices, setDupeChoices] = useState({}); // idx -> 'keep_new' | 'keep_old'
+  const [showDupeReview, setShowDupeReview] = useState(false);
+  // Discard log
+  const [discardLog, setDiscardLog] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('kinevie-csv-discard-log') || '[]'); } catch { return []; }
+  });
+  const [showDiscardLog, setShowDiscardLog] = useState(false);
+
+  const saveDiscardLog = (log) => {
+    setDiscardLog(log);
+    localStorage.setItem('kinevie-csv-discard-log', JSON.stringify(log));
+  };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const MAX_MB = 2;
     if (file.size > MAX_MB * 1024 * 1024) {
-      alert(`File too large. Maximum size is ${MAX_MB} MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)} MB.`);
-      e.target.value = '';
-      return;
+      alert(`File too large. Maximum size is ${MAX_MB} MB.`);
+      e.target.value = ''; return;
     }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const parsed = parseCSV(ev.target.result);
-      setRows(parsed);
-      setStep(1);
-      setStatus(null);
-      setMissingClinics([]);
-      setDupes([]);
+      setRows(parsed); setStep(1); setStatus(null);
+      setMissingClinics([]); setDupeQueue([]); setDupeChoices({});
     };
     reader.readAsText(file);
   };
 
+  const isDupeRow = (r, existingSessions) => {
+    const cName = r["Clinic Name"]?.trim().toLowerCase();
+    const date = r["Date"]; const time = r["Start Time"];
+    const dur = parseInt(r["Duration"]) || 0;
+    const ts = r["Timestamp"] || '';
+    const client = r["Client's Initial"] || '';
+    return existingSessions.find(s =>
+      s.clinicName?.toLowerCase() === cName &&
+      s.date === date && s.startTime === time && s.duration === dur &&
+      (s.clientInitial || '').toLowerCase() === client.toLowerCase()
+    ) || null;
+  };
+
   const analyze = () => {
     const missing = new Set();
-    const newDupes = [];
-
+    const queue = [];
     rows.forEach(r => {
       const cName = r["Clinic Name"]?.trim();
       if (!cName) return;
-      const clinic = clinics.find(c => c.name.toLowerCase() === cName.toLowerCase());
-      if (!clinic) missing.add(cName);
-
-      // Check dupe
-      const dur = parseInt(r["Duration"]) || 0;
-      const date = r["Date"];
-      const time = r["Start Time"];
-      const dupe = sessions.find(s =>
-        s.clinicName?.toLowerCase() === cName.toLowerCase() &&
-        s.date === date && s.startTime === time && s.duration === dur
-      );
-      if (dupe) newDupes.push(r);
+      if (!clinics.find(c => c.name.toLowerCase() === cName.toLowerCase())) missing.add(cName);
+      const existing = isDupeRow(r, sessions);
+      if (existing) queue.push({ newRow: r, existingSession: existing });
     });
-
     setMissingClinics([...missing]);
-    setDupes(newDupes);
-    setStep(2);
+    setDupeQueue(queue);
+    setDupeChoices({});
+    if (queue.length > 0) {
+      setDupeIdx(0); setShowDupeReview(true);
+    } else {
+      setStep(2);
+    }
   };
 
-  const doImport = () => {
-    const imported = [];
-    let skipped = 0;
-
-    rows.forEach(r => {
-      const cName = r["Clinic Name"]?.trim();
-      const clinic = clinics.find(c => c.name.toLowerCase() === cName.toLowerCase());
-      const date = r["Date"];
-      const time = r["Start Time"];
-      const durStr = r["Duration"] || "";
-      const dur = parseInt(durStr);
-
-      // Skip if missing clinic
-      if (!clinic) { skipped++; return; }
-
-      // Skip dupes
-      const dupe = sessions.find(s =>
-        s.clinicId === clinic.id && s.date === date && s.startTime === time && s.duration === dur
-      );
-      if (dupe) { skipped++; return; }
-
-      imported.push({
-        id: genId(),
-        clinicId: clinic.id,
-        clinicName: clinic.name,
-        date,
-        startTime: time,
-        duration: dur,
-        sessionType: r["Session Type"] || "RMT",
-        clientInitial: r["Client's Initial"] || "",
-        notes: r["Notes"] || "",
-      });
-    });
-
-    setSessions(prev => [...prev, ...imported]);
-    setStatus({ imported: imported.length, skipped });
-    setStep(3);
+  const handleDupeChoice = (choice) => {
+    const newChoices = { ...dupeChoices, [dupeIdx]: choice };
+    setDupeChoices(newChoices);
+    if (dupeIdx < dupeQueue.length - 1) {
+      setDupeIdx(i => i + 1);
+    } else {
+      setShowDupeReview(false);
+      setStep(2);
+    }
   };
 
   const createMissingAsInactive = () => {
@@ -2245,15 +2289,190 @@ const CSVImport = ({ sessions, setSessions, clinics, setClinics }) => {
     alert(`Created ${newClinics.length} clinics as inactive. Complete their details in Manage Clinics.`);
   };
 
+  const doImport = () => {
+    const imported = []; let skipped = 0;
+    const newDiscards = [];
+    rows.forEach((r, rowIdx) => {
+      const cName = r["Clinic Name"]?.trim();
+      const clinic = clinics.find(c => c.name.toLowerCase() === cName?.toLowerCase());
+      if (!clinic) { skipped++; return; }
+      const date = r["Date"]; const time = r["Start Time"];
+      const dur = parseInt(r["Duration"]) || 0;
+      // Check if this row is a dupe
+      const dupeIdx2 = dupeQueue.findIndex(d =>
+        d.newRow["Timestamp"] === r["Timestamp"] &&
+        d.newRow["Clinic Name"] === r["Clinic Name"] &&
+        d.newRow["Client's Initial"] === r["Client's Initial"] &&
+        d.newRow["Date"] === r["Date"] &&
+        d.newRow["Start Time"] === r["Start Time"] &&
+        d.newRow["Duration"] === r["Duration"]
+      );
+      if (dupeIdx2 >= 0) {
+        const choice = dupeChoices[dupeIdx2];
+        if (choice === 'keep_old') {
+          skipped++;
+          newDiscards.push({ discardedAt: new Date().toISOString(), reason: 'User chose to keep existing record', record: r });
+          return;
+        } else if (choice === 'keep_new') {
+          // Replace old record — mark old as discarded
+          const old = dupeQueue[dupeIdx2].existingSession;
+          newDiscards.push({ discardedAt: new Date().toISOString(), reason: 'User chose to keep new CSV record (old discarded)', record: { clinicName: old.clinicName, date: old.date, startTime: old.startTime, duration: old.duration, clientInitial: old.clientInitial } });
+          // Remove old from sessions
+          setSessions(prev => prev.filter(s => s.id !== old.id));
+        } else {
+          // No choice made = skip
+          skipped++; return;
+        }
+      } else {
+        // Not a dupe row — check basic duplicate still
+        const basicDupe = sessions.find(s => s.clinicId === clinic.id && s.date === date && s.startTime === time && s.duration === dur);
+        if (basicDupe) { skipped++; return; }
+      }
+      imported.push({
+        id: genId(), clinicId: clinic.id, clinicName: clinic.name,
+        date, startTime: time, duration: dur,
+        sessionType: r["Session Type"] || "RMT",
+        clientInitial: r["Client's Initial"] || "",
+        notes: r["Notes"] || "",
+      });
+    });
+    if (newDiscards.length > 0) saveDiscardLog([...newDiscards, ...discardLog]);
+    setSessions(prev => [...prev, ...imported]);
+    setStatus({ imported: imported.length, skipped, discarded: newDiscards.length });
+    setStep(3);
+  };
+
+  const pendingDupes = dupeQueue.length - Object.keys(dupeChoices).length;
+  const cleanRows = rows.length - dupeQueue.length - (missingClinics.length > 0 ? rows.filter(r => missingClinics.some(m => m.toLowerCase() === r["Clinic Name"]?.trim().toLowerCase())).length : 0);
+
+  const FieldRow = ({ label, val }) => (
+    <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+      <span style={{ fontSize: 11, color: 'var(--text-muted)', minWidth: 80, textAlign: 'right', fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{val || '—'}</span>
+    </div>
+  );
+
   return (
     <div>
+      {/* Duplicate Review Popup */}
+      {showDupeReview && dupeQueue[dupeIdx] && (
+        <div className="modal-overlay" style={{ zIndex: 300 }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: 16, width: '100%', maxWidth: 660,
+            boxShadow: '0 24px 64px rgba(0,0,0,0.25)', border: '2px solid #f59e0b', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <div style={{ padding: '16px 24px', borderBottom: '3px solid #f59e0b', background: '#fef9c3', borderRadius: '14px 14px 0 0' }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#92400e' }}>
+                ⚠️ Duplicate Record Found — {dupeIdx + 1} of {dupeQueue.length}
+              </div>
+              <div style={{ fontSize: 12, color: '#a16207', marginTop: 4 }}>
+                Review and choose which record to keep. The other will be discarded and logged.
+              </div>
+            </div>
+            <div style={{ padding: '20px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {/* Existing record */}
+              <div style={{ border: '2px solid var(--border)', borderRadius: 12, padding: 16, background: 'var(--table-head-bg)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>📁 Existing Record</div>
+                <FieldRow label="Clinic" val={dupeQueue[dupeIdx].existingSession.clinicName} />
+                <FieldRow label="Date" val={dupeQueue[dupeIdx].existingSession.date} />
+                <FieldRow label="Start Time" val={dupeQueue[dupeIdx].existingSession.startTime} />
+                <FieldRow label="Duration" val={`${dupeQueue[dupeIdx].existingSession.duration} min`} />
+                <FieldRow label="Client" val={dupeQueue[dupeIdx].existingSession.clientInitial} />
+                <FieldRow label="Type" val={dupeQueue[dupeIdx].existingSession.sessionType} />
+                <FieldRow label="Notes" val={dupeQueue[dupeIdx].existingSession.notes} />
+                <button onClick={() => handleDupeChoice('keep_old')} style={{
+                  marginTop: 14, width: '100%', padding: '9px', borderRadius: 8, border: '2px solid #16a34a',
+                  background: '#dcfce7', color: '#166534', cursor: 'pointer', fontWeight: 700, fontSize: 13
+                }}>✅ Keep This Record</button>
+              </div>
+              {/* New CSV record */}
+              <div style={{ border: '2px solid var(--border)', borderRadius: 12, padding: 16, background: 'var(--table-head-bg)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>📄 New CSV Record</div>
+                <FieldRow label="Timestamp" val={dupeQueue[dupeIdx].newRow["Timestamp"]} />
+                <FieldRow label="Clinic" val={dupeQueue[dupeIdx].newRow["Clinic Name"]} />
+                <FieldRow label="Date" val={dupeQueue[dupeIdx].newRow["Date"]} />
+                <FieldRow label="Start Time" val={dupeQueue[dupeIdx].newRow["Start Time"]} />
+                <FieldRow label="Duration" val={`${dupeQueue[dupeIdx].newRow["Duration"]} min`} />
+                <FieldRow label="Client" val={dupeQueue[dupeIdx].newRow["Client's Initial"]} />
+                <FieldRow label="Notes" val={dupeQueue[dupeIdx].newRow["Notes"]} />
+                <button onClick={() => handleDupeChoice('keep_new')} style={{
+                  marginTop: 14, width: '100%', padding: '9px', borderRadius: 8, border: '2px solid #3b82f6',
+                  background: '#dbeafe', color: '#1d4ed8', cursor: 'pointer', fontWeight: 700, fontSize: 13
+                }}>📥 Use This Record</button>
+              </div>
+            </div>
+            <div style={{ padding: '12px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between',
+              background: 'var(--table-head-bg)', borderRadius: '0 0 16px 16px', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                {Object.keys(dupeChoices).length} of {dupeQueue.length} resolved
+              </span>
+              {dupeIdx < dupeQueue.length - 1 ? (
+                <button onClick={() => setDupeIdx(i => i + 1)}
+                  style={{ padding: '7px 18px', borderRadius: 8, border: '1px solid var(--border)', background: 'none', cursor: 'pointer', fontSize: 13 }}>
+                  Skip → Next
+                </button>
+              ) : (
+                <button onClick={() => { setShowDupeReview(false); setStep(2); }}
+                  style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                  Done — Review Import
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discard Log Popup */}
+      {showDiscardLog && (
+        <div className="modal-overlay" style={{ zIndex: 300 }}>
+          <div style={{ background: 'var(--card-bg)', borderRadius: 16, width: '100%', maxWidth: 700, maxHeight: '85vh',
+            overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.22)', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '18px 24px', borderBottom: '3px solid var(--primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'var(--card-bg)', borderRadius: '16px 16px 0 0' }}>
+              <span style={{ fontWeight: 700, fontSize: 16 }}>🗃 Discard Log ({discardLog.length} records)</span>
+              <button onClick={() => setShowDiscardLog(false)} style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--table-head-bg)', cursor: 'pointer', fontSize: 18 }}>×</button>
+            </div>
+            {discardLog.length === 0 ? (
+              <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>No discarded records yet</div>
+            ) : (
+              <div style={{ padding: '16px 24px' }}>
+                {discardLog.map((d, i) => (
+                  <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 14, marginBottom: 10, background: 'var(--table-head-bg)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', background: '#fee2e2', padding: '2px 8px', borderRadius: 10 }}>DISCARDED</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{new Date(d.discardedAt).toLocaleString()}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, fontStyle: 'italic' }}>{d.reason}</div>
+                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                      {Object.entries(d.record).filter(([k]) => !['id'].includes(k)).map(([k,v]) => (
+                        <div key={k}><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{k}: </span><span style={{ fontSize: 12, fontWeight: 600 }}>{v||'—'}</span></div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <button onClick={() => { if(confirm('Clear all discard log entries?')) saveDiscardLog([]); }}
+                  style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid #fca5a5', background: '#fee2e2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+                  🗑 Clear Log
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="card" style={{ marginBottom: 20 }}>
-        <div className="card-header"><span className="card-title">Import from Google Form CSV</span></div>
+        <div className="card-header">
+          <span className="card-title">Import from Google Form CSV</span>
+          {discardLog.length > 0 && (
+            <button onClick={() => setShowDiscardLog(true)}
+              style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--table-head-bg)',
+                cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+              🗃 Discard Log ({discardLog.length})
+            </button>
+          )}
+        </div>
         <div className="card-body">
           <p style={{ fontSize: 14, color: "#64748b", marginBottom: 16 }}>
             Upload the CSV export from your Google Form. Expected columns: <code>Timestamp, Clinic Name, Client's Initial, Date, Start Time, Duration, Session Type, Notes</code>
           </p>
-
           <label htmlFor="csvInput" className="import-zone">
             <Icon name="import" style={{ width: 32, height: 32, color: "#e8a045", margin: "0 auto 8px" }} />
             <div style={{ fontWeight: 600, color: "#1a2942" }}>Click to upload CSV file</div>
@@ -2263,33 +2482,20 @@ const CSVImport = ({ sessions, setSessions, clinics, setClinics }) => {
 
           {step >= 1 && rows.length > 0 && (
             <div>
-              <div className="alert alert-info" style={{ marginTop: 16 }}>
-                {rows.length} rows loaded from CSV.
-              </div>
+              <div className="alert alert-info" style={{ marginTop: 16 }}>{rows.length} rows loaded from CSV.</div>
               {step === 1 && (
                 <div className="import-preview">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Clinic</th><th>Date</th><th>Duration</th><th>Type</th><th>Client</th>
-                      </tr>
-                    </thead>
+                  <table><thead><tr><th>Clinic</th><th>Date</th><th>Duration</th><th>Type</th><th>Client</th></tr></thead>
                     <tbody>
                       {rows.slice(0, 5).map((r, i) => (
-                        <tr key={i}>
-                          <td>{r["Clinic Name"]}</td>
-                          <td>{r["Date"]}</td>
-                          <td>{r["Duration"]}</td>
-                          <td>{r["Session Type"]}</td>
-                          <td>{r["Client's Initial"]}</td>
-                        </tr>
+                        <tr key={i}><td>{r["Clinic Name"]}</td><td>{r["Date"]}</td><td>{r["Duration"]}</td><td>{r["Session Type"]}</td><td>{r["Client's Initial"]}</td></tr>
                       ))}
                       {rows.length > 5 && <tr><td colSpan={5} style={{ color: "#94a3b8", textAlign: "center" }}>…and {rows.length - 5} more rows</td></tr>}
                     </tbody>
                   </table>
                 </div>
               )}
-              {step === 1 && <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={analyze}>Analyze & Check</button>}
+              {step === 1 && <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={analyze}>Analyze & Check Duplicates</button>}
             </div>
           )}
 
@@ -2297,31 +2503,47 @@ const CSVImport = ({ sessions, setSessions, clinics, setClinics }) => {
             <div style={{ marginTop: 16 }}>
               {missingClinics.length > 0 && (
                 <div className="alert alert-warning">
-                  <div style={{ fontWeight: 600, marginBottom: 6 }}>⚠ {missingClinics.length} clinic(s) not found in your database:</div>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>⚠ {missingClinics.length} clinic(s) not found:</div>
                   {missingClinics.map(c => <div key={c} style={{ fontSize: 12 }}>• {c}</div>)}
-                  <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={createMissingAsInactive}>
-                    Create as inactive & complete later
+                  <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={createMissingAsInactive}>Create as inactive & complete later</button>
+                </div>
+              )}
+              {dupeQueue.length > 0 && (
+                <div className="alert alert-warning" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>⚠️ {dupeQueue.length} duplicate(s) detected</div>
+                    <div style={{ fontSize: 12, marginTop: 2 }}>{Object.keys(dupeChoices).length} resolved · {pendingDupes} pending</div>
+                  </div>
+                  <button onClick={() => { setDupeIdx(0); setShowDupeReview(true); }}
+                    style={{ padding: '7px 14px', borderRadius: 8, border: '1.5px solid #f59e0b', background: '#fef9c3', color: '#92400e', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
+                    Review Duplicates
                   </button>
                 </div>
               )}
-              {dupes.length > 0 && (
-                <div className="alert alert-info">
-                  {dupes.length} duplicate session(s) will be skipped.
-                </div>
-              )}
               <div className="alert alert-success">
-                Ready to import {rows.length - dupes.length - (missingClinics.length > 0 ? rows.filter(r => missingClinics.some(m => m.toLowerCase() === r["Clinic Name"]?.trim().toLowerCase())).length : 0)} sessions.
+                Ready to import {cleanRows + Object.values(dupeChoices).filter(v => v === 'keep_new').length} sessions.
               </div>
               <div style={{ display: "flex", gap: 10 }}>
                 <button className="btn btn-ghost" onClick={() => setStep(1)}>Back</button>
-                <button className="btn btn-accent" onClick={doImport}><Icon name="import" />Import Sessions</button>
+                <button className="btn btn-accent" onClick={doImport} disabled={dupeQueue.length > 0 && pendingDupes > 0}>
+                  <Icon name="import" />Import Sessions
+                  {pendingDupes > 0 && <span style={{ marginLeft: 6, fontSize: 11 }}>({pendingDupes} dupes unresolved)</span>}
+                </button>
               </div>
             </div>
           )}
 
           {step === 3 && status && (
-            <div className="alert alert-success" style={{ marginTop: 16 }}>
-              ✓ Imported {status.imported} sessions. {status.skipped} skipped (duplicates or missing clinics).
+            <div style={{ marginTop: 16 }}>
+              <div className="alert alert-success">
+                ✓ Imported {status.imported} sessions. {status.skipped} skipped. {status.discarded > 0 && `${status.discarded} record(s) discarded & logged.`}
+              </div>
+              {status.discarded > 0 && (
+                <button onClick={() => setShowDiscardLog(true)}
+                  style={{ marginTop: 8, padding: '7px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--table-head-bg)', cursor: 'pointer', fontSize: 13 }}>
+                  View Discard Log →
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -2439,16 +2661,34 @@ const Settings = ({ smtp, setSmtp, company, setCompany, themeId, setThemeId }) =
                 ))}
               </div>
               <div style={{ background: "#f5ede0", border: "1px solid #ddd0b8", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#8a7258", marginBottom: 8 }}>
-                <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Email Setup — Using Resend (Free, 3000 emails/month)</div>
-                <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
-                  <li>Go to <a href="https://resend.com" target="_blank" rel="noreferrer" style={{ color: "#c4a882" }}>resend.com</a> and create a free account</li>
-                  <li>Click <strong>API Keys</strong> in the left menu → <strong>Create API Key</strong></li>
-                  <li>Name it "Kinevie", click <strong>Add</strong> — copy the key starting with <code>re_...</code></li>
-                  <li>Paste that key into the <strong>Password / API Key</strong> field below</li>
-                  <li>Set <strong>From Email</strong> to <code>onboarding@resend.dev</code> (free tier) or your verified domain</li>
-                  <li>Click <strong>Save</strong> then <strong>Test Connection</strong></li>
-                </ol>
-                <div style={{ marginTop: 6, color: "#8a7055" }}>💡 Resend works over HTTPS so it is never blocked by Railway.</div>
+                {smtp.provider === "gmail" ? (
+                  <>
+                    <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Gmail Setup — Using App Password</div>
+                    <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
+                      <li>Go to <a href="https://myaccount.google.com/security" target="_blank" rel="noreferrer" style={{ color: "#c4a882" }}>myaccount.google.com/security</a> and enable <strong>2-Step Verification</strong></li>
+                      <li>Then go to <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: "#c4a882" }}>myaccount.google.com/apppasswords</a></li>
+                      <li>Type <strong>Kinevie</strong> as the app name → click <strong>Create</strong></li>
+                      <li>Copy the 16-character password shown (remove spaces) → paste into <strong>Password</strong> field below</li>
+                      <li>Set <strong>Username</strong> to your full Gmail address (e.g. <code>you@gmail.com</code>)</li>
+                      <li>Set <strong>From Email</strong> to the same Gmail address</li>
+                      <li>Click <strong>Save</strong> then <strong>Test Connection</strong></li>
+                    </ol>
+                    <div style={{ marginTop: 6, color: "#8a7055" }}>💡 App Password is a 16-character code — <strong>not</strong> your regular Gmail password.</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 13 }}>📋 Email Setup — Using Resend (Free, 3000 emails/month)</div>
+                    <ol style={{ paddingLeft: 18, lineHeight: 2 }}>
+                      <li>Go to <a href="https://resend.com" target="_blank" rel="noreferrer" style={{ color: "#c4a882" }}>resend.com</a> and create a free account</li>
+                      <li>Click <strong>API Keys</strong> in the left menu → <strong>Create API Key</strong></li>
+                      <li>Name it "Kinevie", click <strong>Add</strong> — copy the key starting with <code>re_...</code></li>
+                      <li>Paste that key into the <strong>Password / API Key</strong> field below</li>
+                      <li>Set <strong>From Email</strong> to <code>onboarding@resend.dev</code> (free tier) or your verified domain</li>
+                      <li>Click <strong>Save</strong> then <strong>Test Connection</strong></li>
+                    </ol>
+                    <div style={{ marginTop: 6, color: "#8a7055" }}>💡 Resend works over HTTPS so it is never blocked by Railway.</div>
+                  </>
+                )}
               </div>
               {smtp.provider === "sendgrid" && (
                 <div className="alert alert-info" style={{ fontSize: 12 }}>
@@ -2685,9 +2925,831 @@ const Settings = ({ smtp, setSmtp, company, setCompany, themeId, setThemeId }) =
     </div>
   );
 };
+
+// ─── CLINIC COLORS ─────────────────────────────────────────────────────────────
+const CLINIC_PALETTE = [
+  '#3b82f6', '#e8a045', '#22c55e', '#a855f7', '#ef4444',
+  '#06b6d4', '#f59e0b', '#10b981', '#8b5cf6', '#f43f5e',
+];
+
+const getClinicColor = (clinicName, clinics, bookings) => {
+  // If clinic exists in clinics list, assign color by index
+  const allNames = [...new Set(bookings.map(b => b.clinicName).filter(Boolean))];
+  const idx = allNames.indexOf(clinicName);
+  return CLINIC_PALETTE[idx >= 0 ? idx % CLINIC_PALETTE.length : 0];
+};
+
+// ─── STATUS CONFIG (fix #7: status colours) ───────────────────────────────────
+const BOOKING_STATUS = {
+  confirmed:  { label: 'Confirmed',  emoji: '✅', color: '#16a34a', bg: '#dcfce7', border: '#86efac' },
+  tentative:  { label: 'Tentative',  emoji: '⏳', color: '#b45309', bg: '#fef9c3', border: '#fde047' },
+  cancelled:  { label: 'Cancelled',  emoji: '❌', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5' },
+  completed:  { label: 'Completed',  emoji: '✔',  color: '#78350f', bg: '#f5ede0', border: '#c9a96e' },
+  converted:  { label: 'Converted',  emoji: '🔄', color: '#1e40af', bg: '#dbeafe', border: '#93c5fd' },
+};
+const statusEventColor = (s) => ({ confirmed:'#16a34a', tentative:'#ca8a04', cancelled:'#dc2626', completed:'#c9a96e', converted:'#3b82f6' }[s] || '#3b82f6');
+
+// ─── BOOKING MODAL SHELL (fix #2,#5) ─────────────────────────────────────────
+const BookingModal = ({ title, onClose, children, maxWidth=560, accentColor }) => (
+  <div className="modal-overlay" style={{ zIndex: 200 }}>
+    <div style={{ background:'var(--card-bg,#fff)', borderRadius:16, width:'100%', maxWidth, maxHeight:'92vh', overflowY:'auto',
+      boxShadow:'0 24px 64px rgba(0,0,0,0.22)', border:`1px solid ${accentColor||'var(--border,#e2e8f0)'}`, display:'flex', flexDirection:'column' }}>
+      <div style={{ padding:'18px 24px', borderBottom:`3px solid ${accentColor||'var(--primary,#3b1f0e)'}`,
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+        background:'var(--card-bg,#fff)', borderRadius:'16px 16px 0 0', position:'sticky', top:0, zIndex:1 }}>
+        <span style={{ fontSize:17, fontWeight:700, color:'var(--text-primary)' }}>{title}</span>
+        <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', border:'1.5px solid var(--border)',
+          background:'var(--table-head-bg)', cursor:'pointer', fontSize:18, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-muted)' }}>×</button>
+      </div>
+      {children}
+    </div>
+  </div>
+);
+
+// ─── BOOKING FORM MODAL (fix #1,2,5,6) ────────────────────────────────────────
+const EMPTY_BOOKING = { clinicId:'', clinicName:'', patient:'', sessionDate:'', startTime:'09:00', duration:60, location:'', notes:'', status:'confirmed', color:'#16a34a' };
+const BookingFormModal = ({ booking, clinics, bookings, prefillDate, onSave, onClose }) => {
+  const today = new Date().toISOString().split('T')[0];
+  const [form, setForm] = useState(booking ? {
+    clinicId:booking.clinicId||'', clinicName:booking.clinicName||'', patient:booking.patient||'',
+    sessionDate:booking.sessionDate||'', startTime:booking.startTime||'09:00', duration:booking.duration||60,
+    location:booking.location||'', notes:booking.notes||'', status:booking.status||'confirmed', color:booking.color||'#16a34a',
+  } : { ...EMPTY_BOOKING, sessionDate: prefillDate || '' });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+  const selectedClinic = clinics.find(c => c.id === form.clinicId);
+  // Fix #6: durations from clinic rates
+  const clinicDurations = selectedClinic?.rates?.length ? selectedClinic.rates.map(r=>r.duration).sort((a,b)=>a-b) : [30,45,60,75,90,120];
+  const handleClinicChange = (e) => {
+    const id = e.target.value; const clinic = clinics.find(c=>c.id===id);
+    setForm(f => ({ ...f, clinicId:id, clinicName:clinic?.name||'', duration:clinic?.rates?.[0]?.duration||60, location:clinic?.address||f.location }));
+  };
+  const handleSave = async () => {
+    if (!form.sessionDate) return setErr('Session date is required');
+    if (!form.startTime) return setErr('Start time is required');
+    if (!form.clinicId) return setErr('Please select a clinic');
+    // Fix #1: future only
+    const dt = new Date(`${form.sessionDate}T${form.startTime}`);
+    if (dt <= new Date()) return setErr('Booking must be a future date and time');
+    setSaving(true); setErr('');
+    try { await onSave({ ...form, color: statusEventColor(form.status) }); onClose(); }
+    catch(e) { setErr(e.message); }
+    finally { setSaving(false); }
+  };
+  const inp = { width:'100%', padding:'9px 12px', borderRadius:8, fontSize:13, border:'1.5px solid var(--border)', background:'var(--input-bg,#fff)', color:'var(--text-primary)', outline:'none', boxSizing:'border-box' };
+  const lbl = { fontSize:12, fontWeight:600, color:'var(--text-muted)', marginBottom:5, display:'block', textTransform:'uppercase', letterSpacing:0.5 };
+  const cfg = BOOKING_STATUS[form.status] || BOOKING_STATUS.confirmed;
+  return (
+    <BookingModal title={booking ? '✏️ Edit Booking' : '📅 New Booking'} onClose={onClose} accentColor={statusEventColor(form.status)}>
+      <div style={{ padding:'20px 24px', display:'flex', flexDirection:'column', gap:14 }}>
+        {err && <div style={{ padding:'10px 14px', borderRadius:8, background:'#fee2e2', border:'1px solid #fca5a5', color:'#991b1b', fontSize:13, fontWeight:500 }}>⚠️ {err}</div>}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          <div><label style={lbl}>Clinic *</label>
+            <select style={inp} value={form.clinicId} onChange={handleClinicChange}>
+              <option value="">— Select clinic —</option>
+              {clinics.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select></div>
+          <div><label style={lbl}>Patient Initial</label>
+            <input style={inp} value={form.patient} onChange={e=>setForm(f=>({...f,patient:e.target.value}))} placeholder="e.g. S.M." /></div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          <div><label style={lbl}>Date * (future only)</label>
+            <input style={inp} type="date" value={form.sessionDate} min={today} onChange={e=>setForm(f=>({...f,sessionDate:e.target.value}))} /></div>
+          <div><label style={lbl}>Start Time *</label>
+            <input style={inp} type="time" value={form.startTime} onChange={e=>setForm(f=>({...f,startTime:e.target.value}))} /></div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          <div><label style={lbl}>Duration {selectedClinic?`(${selectedClinic.name})`:'(minutes)'}</label>
+            <select style={inp} value={form.duration} onChange={e=>setForm(f=>({...f,duration:parseInt(e.target.value)}))}>
+              {clinicDurations.map(d => <option key={d} value={d}>{d} min</option>)}
+            </select></div>
+          <div><label style={lbl}>Status</label>
+            <select style={{ ...inp, background: cfg.bg, color: cfg.color, fontWeight:600 }} value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}>
+              {Object.entries(BOOKING_STATUS).filter(([k])=>k!=='converted').map(([k,v])=>(
+                <option key={k} value={k}>{v.emoji} {v.label}</option>
+              ))}
+            </select></div>
+        </div>
+        <div><label style={lbl}>Location</label>
+          <input style={inp} value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))} placeholder="e.g. 123 Main St, Suite 4" /></div>
+        <div><label style={lbl}>Notes / Remarks</label>
+          <textarea style={{ ...inp, resize:'vertical', minHeight:72 }} rows={3} value={form.notes}
+            onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Any notes about this booking…" /></div>
+      </div>
+      <div style={{ padding:'14px 24px', borderTop:'1px solid var(--border)', display:'flex', justifyContent:'space-between', background:'var(--table-head-bg)', borderRadius:'0 0 16px 16px' }}>
+        <button onClick={onClose} style={{ padding:'9px 20px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--card-bg)', color:'var(--text-primary)', cursor:'pointer', fontWeight:600, fontSize:13 }}>Cancel</button>
+        <button onClick={handleSave} disabled={saving} style={{ padding:'9px 24px', borderRadius:8, border:'none', background:saving?'#94a3b8':'var(--primary,#3b1f0e)', color:'#fff', cursor:saving?'not-allowed':'pointer', fontWeight:700, fontSize:13 }}>
+          {saving?'Saving…':booking?'Save Changes':'+ Add Booking'}</button>
+      </div>
+    </BookingModal>
+  );
+};
+
+// ─── BOOKING DETAIL (fix #2,3,4) ──────────────────────────────────────────────
+const BookingDetail = ({ booking, clinics, onEdit, onDelete, onConvert, onStatusChange, onClose }) => {
+  const [notes, setNotes] = useState(booking.notes||'');
+  const [status, setStatus] = useState(booking.status);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+  const cfg = BOOKING_STATUS[status]||BOOKING_STATUS.confirmed;
+
+  const handleStatusChange = async (newStatus) => {
+    setSaving(true); setMsg('');
+    try {
+      // Always save latest notes first, then update status
+      await onStatusChange(booking.id, newStatus, notes);
+      setStatus(newStatus);
+      // Auto-create session when completed, passing latest notes
+      if (newStatus === 'completed') {
+        await onConvert({ ...booking, status: 'completed', notes, patient: booking.patient });
+        setMsg('✅ Session record created with latest notes!');
+      } else {
+        setMsg('✅ Status updated to ' + (BOOKING_STATUS[newStatus]?.label || newStatus));
+      }
+    } catch(e) { setMsg('⚠️ '+e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleSaveNotes = async () => {
+    setSaving(true);
+    try {
+      await onStatusChange(booking.id, status, notes);
+      setEditingNotes(false);
+      setMsg('✅ Notes saved' + (booking.sessionId ? ' & session log updated' : ''));
+    }
+    catch(e) { setMsg('⚠️ '+e.message); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <BookingModal title="" onClose={onClose} maxWidth={440} accentColor={statusEventColor(status)}>
+      <div style={{ padding:'0 24px 0', marginTop:-4 }}>
+        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:10, paddingBottom:14, borderBottom:'1px solid var(--border)' }}>
+          <div>
+            <div style={{ fontSize:17, fontWeight:700, color:'var(--text-primary)', marginBottom:5 }}>{booking.clinicName||'Booking'}</div>
+            <span style={{ fontSize:12, fontWeight:700, padding:'3px 10px', borderRadius:20, background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.border}` }}>
+              {cfg.emoji} {cfg.label}
+            </span>
+          </div>
+          <div style={{ textAlign:'right', flexShrink:0 }}>
+            <div style={{ fontSize:13, fontWeight:600 }}>{booking.startTime} · {booking.duration} min</div>
+            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>
+              {booking.sessionDate?new Date(booking.sessionDate+'T00:00').toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}):'—'}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ padding:'14px 24px', display:'flex', flexDirection:'column', gap:14 }}>
+        {(booking.patient||booking.location) && (
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            {booking.patient&&<div style={{ background:'var(--table-head-bg)', borderRadius:8, padding:'8px 12px' }}>
+              <div style={{ fontSize:10, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, marginBottom:2 }}>Patient</div>
+              <div style={{ fontWeight:600, fontSize:13 }}>{booking.patient}</div></div>}
+            {booking.location&&<div style={{ background:'var(--table-head-bg)', borderRadius:8, padding:'8px 12px' }}>
+              <div style={{ fontSize:10, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, marginBottom:2 }}>Location</div>
+              <div style={{ fontSize:13 }}>{booking.location}</div></div>}
+          </div>
+        )}
+        {/* Fix #3: Change status inline */}
+        <div>
+          <div style={{ fontSize:11, fontWeight:600, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:0.8, marginBottom:8 }}>Change Status</div>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {Object.entries(BOOKING_STATUS).filter(([k])=>k!=='converted').map(([k,v])=>(
+              <button key={k} onClick={()=>handleStatusChange(k)} disabled={saving||status===k}
+                style={{ padding:'5px 12px', borderRadius:20, border:`1.5px solid ${status===k?v.border:'var(--border)'}`,
+                  background:status===k?v.bg:'var(--card-bg)', color:status===k?v.color:'var(--text-muted)',
+                  cursor:saving||status===k?'default':'pointer', fontSize:12, fontWeight:600, transition:'all 0.15s' }}>
+                {v.emoji} {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Fix #3: Inline notes */}
+        <div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:0.8 }}>Notes / Remarks</div>
+            {!editingNotes&&<button onClick={()=>setEditingNotes(true)} style={{ fontSize:11, color:'var(--primary)', cursor:'pointer', background:'none', border:'1px solid var(--border)', borderRadius:6, padding:'2px 8px' }}>✏️ Edit</button>}
+          </div>
+          {editingNotes ? (
+            <div>
+              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3}
+                style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1.5px solid var(--primary)', fontSize:13, resize:'vertical', background:'var(--input-bg,#fff)', color:'var(--text-primary)', boxSizing:'border-box' }} />
+              <div style={{ display:'flex', gap:8, marginTop:6 }}>
+                <button onClick={handleSaveNotes} disabled={saving} style={{ padding:'6px 14px', borderRadius:7, border:'none', background:'var(--primary)', color:'#fff', cursor:'pointer', fontSize:12, fontWeight:600 }}>Save</button>
+                <button onClick={()=>{setEditingNotes(false);setNotes(booking.notes||'');}} style={{ padding:'6px 14px', borderRadius:7, border:'1px solid var(--border)', background:'none', cursor:'pointer', fontSize:12 }}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize:13, color:notes?'var(--text-primary)':'var(--text-muted)', background:'var(--table-head-bg)', borderRadius:8, padding:'8px 12px', minHeight:36, fontStyle:notes?'normal':'italic' }}>
+              {notes||'No notes yet — click Edit to add'}
+            </div>
+          )}
+        </div>
+        {msg&&<div style={{ padding:'8px 12px', borderRadius:8, background:msg.startsWith('⚠')?'#fee2e2':'#dcfce7', color:msg.startsWith('⚠')?'#991b1b':'#166534', fontSize:13, fontWeight:500 }}>{msg}</div>}
+      </div>
+      <div style={{ padding:'12px 24px', borderTop:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', background:'var(--table-head-bg)', borderRadius:'0 0 16px 16px' }}>
+        <button onClick={()=>{if(confirm('Delete this booking?')){onDelete(booking.id);onClose();}}}
+          style={{ padding:'7px 16px', borderRadius:8, border:'1.5px solid #fca5a5', background:'#fee2e2', color:'#dc2626', cursor:'pointer', fontWeight:600, fontSize:12 }}>🗑 Delete</button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={()=>{onEdit(booking);onClose();}}
+            style={{ padding:'7px 16px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--card-bg)', color:'var(--text-primary)', cursor:'pointer', fontWeight:600, fontSize:12 }}>✏️ Edit</button>
+          <button onClick={onClose}
+            style={{ padding:'7px 20px', borderRadius:8, border:'none', background:'var(--primary)', color:'#fff', cursor:'pointer', fontWeight:700, fontSize:12 }}>✓ Done</button>
+        </div>
+      </div>
+    </BookingModal>
+  );
+};
+
+// ─── BOOKINGS CALENDAR ─────────────────────────────────────────────────────────
+const BookingsCalendar = ({ clinics, sessions, setSessions }) => {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('month'); // month | week | day | agenda
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showForm, setShowForm] = useState(false);
+  const [editBooking, setEditBooking] = useState(null);
+  const [detailBooking, setDetailBooking] = useState(null);
+  const [prefillDate, setPrefillDate] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [filterClinic, setFilterClinic] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [searchQ, setSearchQ] = useState('');
+
+  useEffect(() => {
+    bookingsApi.getAll().then(data => { setBookings(data); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  const today = new Date();
+  const pad = n => String(n).padStart(2, '0');
+
+  const fmtDate = (d) => {
+    if (!d) return '';
+    const dt = new Date(d + 'T00:00');
+    return dt.toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const clinicColorMap = useMemo(() => {
+    const names = [...new Set(bookings.map(b => b.clinicName).filter(Boolean))];
+    const map = {};
+    names.forEach((n, i) => { map[n] = CLINIC_PALETTE[i % CLINIC_PALETTE.length]; });
+    return map;
+  }, [bookings]);
+
+  // ── Month view helpers ────────────────────────────────────────────────────────
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDay = getFirstDayOfMonth(year, month);
+
+  const getBookingsForDate = (dateStr) => filteredBookings.filter(b => b.sessionDate === dateStr);
+
+  const navigate = (dir) => {
+    const d = new Date(currentDate);
+    if (view === 'month') d.setMonth(d.getMonth() + dir);
+    else if (view === 'week') d.setDate(d.getDate() + dir * 7);
+    else if (view === 'day') d.setDate(d.getDate() + dir);
+    setCurrentDate(d);
+  };
+
+  const goToday = () => setCurrentDate(new Date());
+
+  // ── CRUD handlers ─────────────────────────────────────────────────────────────
+  const handleSave = async (form) => {
+    const color = form.color || clinicColorMap[form.clinicName] || '#3b82f6';
+    if (editBooking) {
+      const updated = await bookingsApi.update(editBooking.id, { ...form, color });
+      setBookings(bs => bs.map(b => b.id === updated.id ? updated : b));
+    } else {
+      const created = await bookingsApi.create({ ...form, color });
+      setBookings(bs => [...bs, created]);
+    }
+    setEditBooking(null);
+    setPrefillDate(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this booking?')) return;
+    await bookingsApi.delete(id);
+    setBookings(bs => bs.filter(b => b.id !== id));
+  };
+
+  const handleStatusChange = async (id, newStatus, notes) => {
+    const booking = bookings.find(b => b.id === id);
+    const updated = await bookingsApi.update(id, { ...booking, status: newStatus, notes, color: statusEventColor(newStatus) });
+    setBookings(bs => bs.map(b => b.id === id ? updated : b));
+    if (detailBooking?.id === id) setDetailBooking(updated);
+    // Fix #3: if booking already has a linked session, sync notes to session log
+    if (booking?.sessionId && setSessions) {
+      setSessions(prev => prev.map(s => s.id === booking.sessionId ? { ...s, notes } : s));
+    }
+  };
+
+  const handleConvert = async (booking) => {
+    // Pass notes so the created session record gets the latest edited notes
+    const result = await bookingsApi.convert(booking.id, booking.notes);
+    setBookings(bs => bs.map(b => b.id === booking.id ? { ...b, status: booking.status === 'completed' ? 'completed' : 'converted', sessionId: result.sessionId } : b));
+    if (setSessions && result.session) {
+      setSessions(s => [result.session, ...s]);
+    }
+    return result;
+  };
+
+  const openNew = (dateStr) => {
+    setPrefillDate(dateStr || '');
+    setEditBooking(null);
+    setShowForm(true);
+  };
+
+  const openEdit = (booking) => {
+    setEditBooking(booking);
+    setShowForm(true);
+  };
+
+  // Fix #8: filtered bookings
+  const filteredBookings = useMemo(() => bookings.filter(b => {
+    if (filterClinic && b.clinicId !== filterClinic) return false;
+    if (filterStatus && b.status !== filterStatus) return false;
+    if (searchQ && !b.patient?.toLowerCase().includes(searchQ.toLowerCase()) &&
+        !b.clinicName?.toLowerCase().includes(searchQ.toLowerCase())) return false;
+    return true;
+  }), [bookings, filterClinic, filterStatus, searchQ]);
+
+  // ── Upcoming (next 7 days) ────────────────────────────────────────────────────
+  const upcomingBookings = useMemo(() => {
+    const now = new Date(); now.setHours(0,0,0,0);
+    const end = new Date(now); end.setDate(end.getDate() + 7);
+    return bookings
+      .filter(b => {
+        if (b.status === 'cancelled') return false;
+        const d = new Date(b.sessionDate + 'T00:00');
+        return d >= now && d <= end;
+      })
+      .sort((a, b) => a.sessionDate.localeCompare(b.sessionDate) || a.startTime.localeCompare(b.startTime));
+  }, [bookings]);
+
+  // ── Month View ────────────────────────────────────────────────────────────────
+  const renderMonth = () => {
+    const cells = [];
+    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+    for (let i = 0; i < totalCells; i++) {
+      const dayNum = i - firstDay + 1;
+      const isCurrentMonth = dayNum >= 1 && dayNum <= daysInMonth;
+      const dateStr = isCurrentMonth ? `${year}-${pad(month + 1)}-${pad(dayNum)}` : null;
+      const isToday = dateStr === `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+      const dayBookings = dateStr ? getBookingsForDate(dateStr) : [];
+
+      cells.push(
+        <div key={i} onClick={() => isCurrentMonth && openNew(dateStr)}
+          style={{ minHeight: 90, background: isToday ? 'var(--card-hover, rgba(59,130,246,0.06))' : 'transparent',
+            border: `1px solid var(--border)`, borderRadius: 6, padding: '4px 6px', cursor: isCurrentMonth ? 'pointer' : 'default',
+            opacity: isCurrentMonth ? 1 : 0.3, position: 'relative' }}>
+          <div style={{ fontWeight: isToday ? 700 : 400, fontSize: 13,
+            color: isToday ? '#3b82f6' : 'var(--text-primary)',
+            background: isToday ? '#3b82f620' : 'transparent',
+            width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+            {isCurrentMonth ? dayNum : ''}
+          </div>
+          {dayBookings.slice(0, 3).map(b => (
+            <div key={b.id} onClick={e => { e.stopPropagation(); setDetailBooking(b); }}
+              style={{ background: b.color || clinicColorMap[b.clinicName] || '#3b82f6',
+                color: '#fff', fontSize: 11, borderRadius: 4, padding: '2px 5px', marginBottom: 2,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer',
+                opacity: b.status === 'cancelled' ? 0.4 : 1 }}>
+              {b.startTime} {b.clinicName || 'Booking'}
+            </div>
+          ))}
+          {dayBookings.length > 3 && (
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', paddingLeft: 2 }}>+{dayBookings.length - 3} more</div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 2 }}>
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+            <div key={d} style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', padding: '6px 0' }}>{d}</div>
+          ))}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>{cells}</div>
+      </div>
+    );
+  };
+
+  // ── Week View ─────────────────────────────────────────────────────────────────
+  const renderWeek = () => {
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      return d;
+    });
+
+    const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7am to 8pm
+
+    return (
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', minWidth: 600 }}>
+          <div />
+          {days.map(d => {
+            const ds = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+            const isTod = ds === `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+            return (
+              <div key={ds} style={{ textAlign: 'center', padding: '6px 4px', borderBottom: '2px solid var(--border)',
+                background: isTod ? '#3b82f610' : 'transparent', cursor: 'pointer' }} onClick={() => openNew(ds)}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{d.toLocaleDateString('en-CA', { weekday: 'short' })}</div>
+                <div style={{ fontSize: 16, fontWeight: isTod ? 700 : 400, color: isTod ? '#3b82f6' : 'var(--text-primary)' }}>{d.getDate()}</div>
+              </div>
+            );
+          })}
+          {hours.map(h => (
+            <React.Fragment key={h}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'right', paddingRight: 6, paddingTop: 2, height: 50 }}>
+                {h}:00
+              </div>
+              {days.map(d => {
+                const ds = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+                const slotBookings = getBookingsForDate(ds).filter(b => {
+                  const bh = parseInt(b.startTime?.split(':')[0] || 0);
+                  return bh === h;
+                });
+                return (
+                  <div key={ds} style={{ borderLeft: '1px solid var(--border)', borderBottom: '1px dashed var(--border)',
+                    height: 50, padding: '2px 3px', cursor: 'pointer', position: 'relative' }}
+                    onClick={() => openNew(ds)}>
+                    {slotBookings.map(b => (
+                      <div key={b.id} onClick={e => { e.stopPropagation(); setDetailBooking(b); }}
+                        style={{ background: b.color || clinicColorMap[b.clinicName] || '#3b82f6',
+                          color: '#fff', fontSize: 10, borderRadius: 3, padding: '1px 4px',
+                          marginBottom: 1, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          opacity: b.status === 'cancelled' ? 0.4 : 1 }}>
+                        {b.startTime} {b.clinicName}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ── Day View ──────────────────────────────────────────────────────────────────
+  const renderDay = () => {
+    const ds = `${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}-${pad(currentDate.getDate())}`;
+    const dayBookings = getBookingsForDate(ds).sort((a,b) => a.startTime.localeCompare(b.startTime));
+    const hours = Array.from({ length: 14 }, (_, i) => i + 7);
+    return (
+      <div style={{ maxWidth: 600 }}>
+        {hours.map(h => {
+          const slotBookings = dayBookings.filter(b => parseInt(b.startTime?.split(':')[0] || 0) === h);
+          return (
+            <div key={h} style={{ display: 'flex', borderBottom: '1px dashed var(--border)', minHeight: 56 }}>
+              <div style={{ width: 50, fontSize: 11, color: 'var(--text-muted)', paddingTop: 4, flexShrink: 0 }}>{h}:00</div>
+              <div style={{ flex: 1, padding: '3px 0', cursor: 'pointer' }} onClick={() => openNew(ds)}>
+                {slotBookings.map(b => (
+                  <div key={b.id} onClick={e => { e.stopPropagation(); setDetailBooking(b); }}
+                    style={{ background: b.color || '#3b82f6', color: '#fff', borderRadius: 6,
+                      padding: '6px 10px', marginBottom: 3, cursor: 'pointer', opacity: b.status === 'cancelled' ? 0.4 : 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{b.startTime} — {b.clinicName}</div>
+                    {b.patient && <div style={{ fontSize: 11, opacity: 0.85 }}>Patient: {b.patient}</div>}
+                    {b.duration && <div style={{ fontSize: 11, opacity: 0.85 }}>{b.duration} min{b.location ? ` · ${b.location}` : ''}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ── Agenda View ───────────────────────────────────────────────────────────────
+  const renderAgenda = () => {
+    const now = new Date(); now.setHours(0,0,0,0);
+    const upcoming = bookings
+      .filter(b => new Date(b.sessionDate + 'T00:00') >= now && b.status !== 'cancelled')
+      .sort((a,b) => a.sessionDate.localeCompare(b.sessionDate) || a.startTime.localeCompare(b.startTime));
+
+    if (!upcoming.length) return (
+      <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>No upcoming bookings</div>
+        <div style={{ fontSize: 13 }}>Click <strong>+ Add Booking</strong> to schedule your first session</div>
+      </div>
+    );
+
+    let lastDate = '';
+    return (
+      <div>
+        {upcoming.map(b => {
+          const showDate = b.sessionDate !== lastDate;
+          lastDate = b.sessionDate;
+          return (
+            <div key={b.id}>
+              {showDate && (
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-muted)',
+                  textTransform: 'uppercase', letterSpacing: 1, padding: '16px 0 6px',
+                  borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+                  {fmtDate(b.sessionDate)}
+                </div>
+              )}
+              <div onClick={() => setDetailBooking(b)} style={{ display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 12px', borderRadius: 8, marginBottom: 4, cursor: 'pointer',
+                background: 'var(--table-head-bg)', border: '1px solid var(--border)',
+                transition: 'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--card-hover, #f1f5f9)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--table-head-bg)'}>
+                <div style={{ width: 4, height: 44, borderRadius: 2, background: b.color || '#3b82f6', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{b.clinicName || 'Booking'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {b.startTime} · {b.duration} min{b.patient ? ` · ${b.patient}` : ''}{b.location ? ` · ${b.location}` : ''}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20,
+                  background: b.status === 'confirmed' ? '#dcfce7' : b.status === 'tentative' ? '#fef9c3' : '#dbeafe',
+                  color: b.status === 'confirmed' ? '#166534' : b.status === 'tentative' ? '#854d0e' : '#1e40af' }}>
+                  {b.status}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ── Header label ──────────────────────────────────────────────────────────────
+  const headerLabel = () => {
+    const monthName = currentDate.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' });
+    if (view === 'month') return monthName;
+    if (view === 'day') return currentDate.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    if (view === 'week') {
+      const start = new Date(currentDate); start.setDate(currentDate.getDate() - currentDate.getDay());
+      const end = new Date(start); end.setDate(start.getDate() + 6);
+      return `${start.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    }
+    return 'Upcoming';
+  };
+
+  // ── Clinic legend ─────────────────────────────────────────────────────────────
+  const legend = Object.entries(clinicColorMap);
+
+  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>Loading calendar…</div>;
+
+  const hasActiveFilter = filterClinic || filterStatus || searchQ;
+
+  return (
+    <div style={{ width: '100%' }}>
+      {/* Header */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-body" style={{ padding: '12px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {/* Nav */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate(-1)}>‹</button>
+              <button className="btn btn-ghost btn-sm" onClick={goToday} style={{ fontSize: 12 }}>Today</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate(1)}>›</button>
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 16, flex: 1, minWidth: 140 }}>{headerLabel()}</div>
+            {/* View switcher */}
+            <div style={{ display: 'flex', background: 'var(--table-head-bg)', borderRadius: 8, padding: 2, gap: 2 }}>
+              {['month','week','day','agenda'].map(v => (
+                <button key={v} onClick={() => setView(v)}
+                  style={{ padding: '4px 11px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                    background: view === v ? 'var(--primary)' : 'transparent',
+                    color: view === v ? '#fff' : 'var(--text-muted)', transition: 'all 0.15s' }}>
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
+                </button>
+              ))}
+            </div>
+            {/* Search button */}
+            <button onClick={() => setShowSearch(true)} style={{
+              padding: '6px 14px', borderRadius: 8, border: `1.5px solid ${hasActiveFilter ? '#3b82f6' : 'var(--border)'}`,
+              background: hasActiveFilter ? '#dbeafe' : 'var(--card-bg)', color: hasActiveFilter ? '#1d4ed8' : 'var(--text-primary)',
+              cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5,
+            }}>
+              🔍 Search{hasActiveFilter ? ` (${filteredBookings.length})` : ''}
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => openNew('')}>+ Add Booking</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Active filter chips */}
+      {hasActiveFilter && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
+          {searchQ && <span style={{ padding: '3px 10px', borderRadius: 20, background: '#dbeafe', color: '#1d4ed8', fontSize: 12, fontWeight: 600 }}>🔍 "{searchQ}"</span>}
+          {filterClinic && <span style={{ padding: '3px 10px', borderRadius: 20, background: '#dbeafe', color: '#1d4ed8', fontSize: 12, fontWeight: 600 }}>🏥 {clinics.find(c=>c.id===filterClinic)?.name}</span>}
+          {filterStatus && <span style={{ padding: '3px 10px', borderRadius: 20, background: BOOKING_STATUS[filterStatus]?.bg, color: BOOKING_STATUS[filterStatus]?.color, fontSize: 12, fontWeight: 600 }}>{BOOKING_STATUS[filterStatus]?.emoji} {BOOKING_STATUS[filterStatus]?.label}</span>}
+          <button onClick={() => { setFilterClinic(''); setFilterStatus(''); setSearchQ(''); }}
+            style={{ padding: '3px 10px', borderRadius: 20, border: '1px solid #fca5a5', background: '#fee2e2', color: '#dc2626', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+            ✕ Clear all
+          </button>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{filteredBookings.length} result{filteredBookings.length !== 1 ? 's' : ''}</span>
+        </div>
+      )}
+
+      {/* Main layout: calendar + sidebar */}
+      <div style={{ display: 'grid', gridTemplateColumns: legend.length > 0 ? '1fr 190px' : '1fr', gap: 16, alignItems: 'start', width: '100%' }}>
+        {/* Calendar body */}
+        <div className="card" style={{ minWidth: 0, width: '100%' }}>
+          <div className="card-body" style={{ padding: 12 }}>
+            {/* Search results view */}
+            {hasActiveFilter ? (
+              <div>
+                {filteredBookings.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+                    <div style={{ fontWeight: 600, marginBottom: 6 }}>No bookings found</div>
+                    <div style={{ fontSize: 13 }}>Try adjusting your filters</div>
+                  </div>
+                ) : (
+                  <div>
+                    {filteredBookings.sort((a,b) => a.sessionDate.localeCompare(b.sessionDate) || a.startTime.localeCompare(b.startTime)).map(b => {
+                      const cfg = BOOKING_STATUS[b.status] || BOOKING_STATUS.confirmed;
+                      return (
+                        <div key={b.id} onClick={() => setDetailBooking(b)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 8,
+                            marginBottom: 6, cursor: 'pointer', background: 'var(--table-head-bg)',
+                            border: `1px solid var(--border)`, transition: 'background 0.15s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--card-hover,#f1f5f9)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'var(--table-head-bg)'}>
+                          <div style={{ width: 4, height: 44, borderRadius: 2, background: b.color || '#3b82f6', flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>{b.clinicName}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                              {b.sessionDate ? new Date(b.sessionDate+'T00:00').toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}) : '—'}
+                              {' · '}{b.startTime} · {b.duration} min{b.patient ? ` · ${b.patient}` : ''}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, fontWeight: 600, flexShrink: 0 }}>
+                            {cfg.emoji} {cfg.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {view === 'month'  && renderMonth()}
+                {view === 'week'   && renderWeek()}
+                {view === 'day'    && renderDay()}
+                {view === 'agenda' && renderAgenda()}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar: legend + upcoming */}
+        {legend.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Clinic legend */}
+            <div className="card">
+              <div className="card-header" style={{ padding: '10px 14px' }}>
+                <span className="card-title" style={{ fontSize: 13 }}>Clinics</span>
+              </div>
+              <div className="card-body" style={{ padding: '8px 14px' }}>
+                {legend.map(([name, color]) => (
+                  <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Upcoming (next 7 days) */}
+            {upcomingBookings.length > 0 && (
+              <div className="card">
+                <div className="card-header" style={{ padding: '10px 14px' }}>
+                  <span className="card-title" style={{ fontSize: 13 }}>Next 7 Days</span>
+                </div>
+                <div className="card-body" style={{ padding: '4px 10px' }}>
+                  {upcomingBookings.slice(0, 5).map(b => (
+                    <div key={b.id} onClick={() => setDetailBooking(b)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 4px',
+                        borderBottom: '1px solid var(--border)', cursor: 'pointer' }}>
+                      <div style={{ width: 3, height: 32, borderRadius: 2, background: b.color || '#3b82f6', flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.clinicName}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fmtDate(b.sessionDate)} · {b.startTime}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {upcomingBookings.length > 5 && (
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '6px 4px' }}>+{upcomingBookings.length - 5} more</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      {/* Search Popup */}
+      {showSearch && (
+        <BookingModal title="🔍 Search Bookings" onClose={() => { setShowSearch(false); setFilterClinic(''); setFilterStatus(''); setSearchQ(''); }} maxWidth={500} accentColor="#3b82f6">
+          <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Search by patient initial or clinic name
+              </label>
+              <input autoFocus value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                placeholder="e.g. S.M. or FlexCare…"
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid var(--border)',
+                  background: 'var(--input-bg,#fff)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Filter by Clinic</label>
+              <select value={filterClinic} onChange={e => setFilterClinic(e.target.value)}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--input-bg,#fff)', color: 'var(--text-primary)', fontSize: 13 }}>
+                <option value="">All Clinics</option>
+                {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Filter by Status</label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button onClick={() => setFilterStatus('')}
+                  style={{ padding: '6px 14px', borderRadius: 20, border: `1.5px solid ${!filterStatus ? '#3b82f6' : 'var(--border)'}`,
+                    background: !filterStatus ? '#dbeafe' : 'var(--card-bg)', color: !filterStatus ? '#1d4ed8' : 'var(--text-muted)',
+                    cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>All</button>
+                {Object.entries(BOOKING_STATUS).map(([k, v]) => (
+                  <button key={k} onClick={() => setFilterStatus(k)}
+                    style={{ padding: '6px 14px', borderRadius: 20, border: `1.5px solid ${filterStatus === k ? v.border : 'var(--border)'}`,
+                      background: filterStatus === k ? v.bg : 'var(--card-bg)', color: filterStatus === k ? v.color : 'var(--text-muted)',
+                      cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                    {v.emoji} {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {(filterClinic || filterStatus || searchQ) && (
+              <div style={{ padding: '8px 12px', borderRadius: 8, background: '#dbeafe', color: '#1d4ed8', fontSize: 13, fontWeight: 600 }}>
+                {filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''} match your filters
+              </div>
+            )}
+          </div>
+          <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between',
+            background: 'var(--table-head-bg)', borderRadius: '0 0 16px 16px' }}>
+            <button onClick={() => { setFilterClinic(''); setFilterStatus(''); setSearchQ(''); }}
+              style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid #fca5a5', background: '#fee2e2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+              ✕ Clear All
+            </button>
+            <button onClick={() => { setFilterClinic(''); setFilterStatus(''); setSearchQ(''); setShowSearch(false); }}
+              style={{ padding: '8px 20px', borderRadius: 8, border: '1.5px solid #fca5a5', background: '#fee2e2', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+              ✕ Clear & Close
+            </button>
+            <button onClick={() => setShowSearch(false)}
+              style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+              ✅ Apply & View Results
+            </button>
+          </div>
+        </BookingModal>
+      )}
+      {showForm && (
+        <BookingFormModal
+          booking={editBooking}
+          clinics={clinics}
+          bookings={bookings}
+          prefillDate={prefillDate}
+          onSave={handleSave}
+          onClose={() => { setShowForm(false); setEditBooking(null); setPrefillDate(null); }}
+        />
+      )}
+      {detailBooking && (
+        <BookingDetail
+          booking={detailBooking}
+          clinics={clinics}
+          onEdit={(b) => { setEditBooking(b); setShowForm(true); }}
+          onDelete={handleDelete}
+          onConvert={handleConvert}
+          onStatusChange={handleStatusChange}
+          onClose={() => setDetailBooking(null)}
+        />
+      )}
+    </div>
+  );
+};
+
 const NAV_PRACTITIONER = [
   { id: "dashboard", label: "Dashboard", icon: "dashboard", section: "main" },
   { id: "clinics", label: "Manage Clinics", icon: "clinic", section: "main" },
+  { id: "bookings", label: "Bookings Calendar", icon: "calendar", section: "main" },
   { id: "sessions", label: "Session Logs", icon: "sessions", section: "main" },
   { id: "invoices", label: "Invoices", icon: "invoice", section: "main" },
   { id: "expenses", label: "Expenses", icon: "expense", section: "main" },
@@ -3066,6 +4128,7 @@ function MainApp() {
   const [sessions, setSessionsRaw] = useState([]);
   const [invoices, setInvoicesRaw] = useState([]);
   const [expenses, setExpensesRaw] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [smtp, setSmtpRaw] = useState(INITIAL_SMTP);
   const [company, setCompanyRaw] = useState(INITIAL_COMPANY);
   const [pendingCount, setPendingCount] = useState(0);
@@ -3120,11 +4183,13 @@ function MainApp() {
       api.getInvoices(),
       api.getExpenses(),
       api.getSettings(),
-    ]).then(([c, s, inv, exp, settings]) => {
+      bookingsApi.getAll(),
+    ]).then(([c, s, inv, exp, settings, bk]) => {
       setClinicsRaw(c);
       setSessionsRaw(s);
       setInvoicesRaw(inv);
       setExpensesRaw(exp);
+      setBookings(bk || []);
       if (settings.smtp && Object.keys(settings.smtp).length) setSmtpRaw({ ...INITIAL_SMTP, ...settings.smtp });
       if (settings.company && Object.keys(settings.company).length) setCompanyRaw({ ...INITIAL_COMPANY, ...settings.company });
       setDataLoaded(true);
@@ -3321,8 +4386,9 @@ function MainApp() {
           </div>
           <div className="content">
             {page === 'dashboard' && user?.role === 'administrator' && <AdminDashboard allUsers={allUsers} />}
-            {page === 'dashboard' && user?.role !== 'administrator' && <Dashboard sessions={sessions} invoices={invoices} expenses={expenses} clinics={clinics} />}
+            {page === 'dashboard' && user?.role !== 'administrator' && <Dashboard sessions={sessions} invoices={invoices} expenses={expenses} clinics={clinics} bookings={bookings} />}
             {page === 'clinics'    && <Clinics clinics={clinics} setClinics={setClinics} />}
+            {page === 'bookings'   && <BookingsCalendar clinics={clinics} sessions={sessions} setSessions={setSessions} />}
             {page === 'sessions'   && <Sessions sessions={sessions} setSessions={setSessions} clinics={clinics} />}
             {page === 'invoices'   && <Invoices invoices={invoices} setInvoices={setInvoices} sessions={sessions} clinics={clinics} company={company} />}
             {page === 'expenses'   && <Expenses expenses={expenses} setExpenses={setExpenses} />}

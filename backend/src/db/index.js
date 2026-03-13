@@ -103,6 +103,27 @@ const SCHEMA = `
   ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMPTZ;
 
   -- OTP for password reset
+  CREATE TABLE IF NOT EXISTS bookings (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    clinic_id    UUID REFERENCES clinics(id) ON DELETE SET NULL,
+    clinic_name  TEXT DEFAULT '',
+    patient      TEXT DEFAULT '',
+    session_date DATE NOT NULL,
+    start_time   TIME NOT NULL,
+    duration     INTEGER DEFAULT 60,
+    end_time     TIME,
+    location     TEXT DEFAULT '',
+    notes        TEXT DEFAULT '',
+    color        TEXT DEFAULT '#3b82f6',
+    status       TEXT DEFAULT 'confirmed',
+    source       TEXT DEFAULT 'manual',
+    session_id   UUID REFERENCES sessions(id) ON DELETE SET NULL,
+    email_id     UUID,
+    created_at   TIMESTAMPTZ DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ DEFAULT NOW()
+  );
+
   CREATE TABLE IF NOT EXISTS otp_tokens (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email       TEXT NOT NULL,
